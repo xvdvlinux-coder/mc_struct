@@ -1,0 +1,275 @@
+// viewer.osp - Orquestador de la escena Three.js, WebSocket y controles de camara en Oriented-Direct
+
+import { createBlockMesh } from "./geometries.osp";
+import { createInspector } from "./inspector.osp";
+import { Vec3, Block } from "./types.osp";
+import { World3D, Symmetry } from "./world.osp";
+
+val THREE = @win.THREE;
+val OrbitControls = THREE.OrbitControls or @win.OrbitControls;
+val WebSocketClass = @win.WebSocket;
+
+val Scene = THREE.Scene;
+val PerspectiveCamera = THREE.PerspectiveCamera;
+val WebGLRenderer = THREE.WebGLRenderer;
+val HemisphereLight = THREE.HemisphereLight;
+val DirectionalLight = THREE.DirectionalLight;
+val GridHelper = THREE.GridHelper;
+val AxesHelper = THREE.AxesHelper;
+val Group = THREE.Group;
+val Color = THREE.Color;
+
+val container = @id("canvas-container");
+val statTotal = @id("stat-total-blocks");
+val statDims = @id("stat-dimensions");
+val connStatus = @id("connection-status");
+val toast = @id("toast-message");
+
+// Escena, Camara y Renderizador
+val scene = new Scene();
+scene.background = new Color(0x0e1117);
+
+val camera = new PerspectiveCamera(45, @win.innerWidth / @win.innerHeight, 0.1, 1000);
+camera.position.set(25, 20, 35);
+
+val renderer = new WebGLRenderer({ "antialias": true });
+renderer.setSize(@win.innerWidth, @win.innerHeight);
+renderer.setPixelRatio(@win.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+
+val controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+// Iluminacion
+val hemiLight = new HemisphereLight(0xffffff, 0x444444, 1.2);
+scene.add(hemiLight);
+
+val dirLight = new DirectionalLight(0xffffff, 1.5);
+dirLight.position.set(30, 50, 40);
+dirLight.castShadow = true;
+scene.add(dirLight);
+
+// Guias de coordenadas (Grid y Ejes ampliados)
+val gridHelper = new GridHelper(180, 180, 0x388bfd, 0x21262d);
+gridHelper.position.y = -0.5;
+scene.add(gridHelper);
+
+val axesHelper = new AxesHelper(20);
+scene.add(axesHelper);
+
+// Inspector
+val inspector = createInspector(camera, scene, renderer.domElement);
+
+// Contenedor dinamico de bloques
+val structureGroup = new Group();
+scene.add(structureGroup);
+
+// WebSocket y Estado de Conexion
+mut socket = null;
+mut isConnected = false;
+
+fn showToast(toastText) {
+  @text(toast, toastText);
+  @css(toast, { "opacity": "1" });
+  setTimeout(() => { @css(toast, { "opacity": "0" }); }, 4000);
+}
+
+fn renderWorld(data) {
+  // Limpiar escena anterior
+  while (structureGroup.children.length > 0) {
+    val obj = structureGroup.children[0];
+    structureGroup.remove(obj);
+  }
+
+  val bounds = data.bounds;
+  val blocks = data.blocks;
+  @text(statTotal, `${bounds.total}`);
+  @text(statDims, `${bounds.dimensions.x} x ${bounds.dimensions.y} x ${bounds.dimensions.z}`);
+
+  val meshes = [];
+  val total = blocks.length;
+  for (mut i = 0; i < total; i += 1) {
+    val blockData = blocks[i];
+    val meshGroup = createBlockMesh(blockData);
+    structureGroup.add(meshGroup);
+    meshes.push(meshGroup);
+  }
+
+  inspector.setBlockMeshes(meshes, bounds.max.y);
+}
+
+mut lastBlockCount = -1;
+mut lastCode = "";
+
+fn compileBlockCode(code) {
+  val world = new World3D();
+  val context = {
+    "world": world,
+    "Vec3": (x, y, z) => new Vec3(x, y, z),
+    "Block": (id, states = {}) => new Block(id, states),
+    "Symmetry": Symmetry,
+    "console": console,
+    "Math": Math,
+    "set": (x, y, z, id, states = {}) => world.setBlock(new Vec3(x, y, z), new Block(id, states)),
+    "fillBox": (x1, y1, z1, x2, y2, z2, id, states = {}) => {
+      val minX = Math.min(x1, x2); val maxX = Math.max(x1, x2);
+      val minY = Math.min(y1, y2); val maxY = Math.max(y1, y2);
+      val minZ = Math.min(z1, z2); val maxZ = Math.max(z1, z2);
+      for (mut y = minY; y <= maxY; y += 1) {
+        for (mut z = minZ; z <= maxZ; z += 1) {
+          for (mut x = minX; x <= maxX; x += 1) {
+            world.setBlock(new Vec3(x, y, z), new Block(id, states));
+          }
+        }
+      }
+    }
+  };
+
+  val runner = new Function("ctx", `with (ctx) { ${code} }`);
+  runner(context);
+  return world.serialize();
+}
+
+async fn syncWorld() {
+  // 1. Carga dinamica y compilacion en tiempo real de main.block en el navegador
+  try {
+    val blockRes = await @win.fetch(`./main.block?v=${Date.now()}`);
+    if (blockRes.ok) {
+      val code = await blockRes.text();
+      if (code and code.length > 50 and code is not lastCode) {
+        try {
+          val worldData = compileBlockCode(code);
+          lastCode = code;
+          renderWorld(worldData);
+          @text(connStatus, "En vivo");
+          connStatus.className = "status-indicator online";
+          showToast(`Compilado en vivo: ${worldData.bounds.total} bloques`);
+        } catch (compileErr) {
+          @error("[Error en main.block]:", compileErr);
+          showToast(`Error en main.block: ${compileErr.message}`);
+        }
+      }
+      return true;
+    }
+  } catch (err) {}
+  return false;
+}
+
+fn connectWS() {
+  if (socket is not null) {
+    socket.onopen = null;
+    socket.onmessage = null;
+    socket.onclose = null;
+    socket.onerror = null;
+    socket.close();
+    socket = null;
+  }
+
+  val protocol = (@win.location.protocol is "https:") ? "wss:" : "ws:";
+  val host = @win.location.host;
+  val wsUrl = `${protocol}//${host}`;
+
+  try {
+    socket = new WebSocketClass(wsUrl);
+  } catch (err) {
+    isConnected = false;
+    @text(connStatus, "Modo Local");
+    connStatus.className = "status-indicator";
+    return;
+  }
+
+  socket.onopen = () => {
+    isConnected = true;
+    @text(connStatus, "En vivo");
+    connStatus.className = "status-indicator online";
+    connStatus.title = "Conectado al servidor en vivo (Actualizaciones en tiempo real)";
+  };
+
+  socket.onmessage = (event) => {
+    val msg = JSON.parse(event.data);
+    if (msg.type is "UPDATE_WORLD") {
+      lastBlockCount = msg.data.bounds ? msg.data.bounds.total : lastBlockCount;
+      renderWorld(msg.data);
+      @text(connStatus, "En vivo");
+      connStatus.className = "status-indicator online";
+      showToast(`Actualizado en vivo: ${msg.data.bounds.total} bloques`);
+    } else if (msg.type is "BUILD_ERROR") {
+      showToast(`Error: ${msg.error}`);
+    }
+  };
+
+  socket.onclose = () => {
+    isConnected = false;
+    @text(connStatus, "Modo Local");
+    connStatus.className = "status-indicator";
+    connStatus.title = "Deteccion automatica activa. Clic para reconectar";
+  };
+
+  socket.onerror = () => {
+    isConnected = false;
+  };
+}
+
+@on(connStatus, "click", () => {
+  connectWS();
+});
+
+// Botones de vistas
+@on(@id("btn-view-iso"), "click", () => {
+  camera.position.set(25, 20, 35);
+  controls.target.set(0, 5, 0);
+});
+
+@on(@id("btn-view-top"), "click", () => {
+  camera.position.set(0, 45, 0);
+  controls.target.set(0, 0, 0);
+});
+
+@on(@id("btn-view-front"), "click", () => {
+  camera.position.set(0, 10, 45);
+  controls.target.set(0, 5, 0);
+});
+
+@on(@id("btn-view-side"), "click", () => {
+  camera.position.set(45, 10, 0);
+  controls.target.set(0, 5, 0);
+});
+
+// Opciones visuales
+@on(@id("chk-grid"), "change", (e) => {
+  gridHelper.visible = e.target.checked;
+  axesHelper.visible = e.target.checked;
+});
+
+@on(@id("chk-wireframe"), "change", (e) => {
+  val isWireframe = e.target.checked;
+  structureGroup.traverse((child) => {
+    if (child.isMesh and child.material) {
+      child.material.wireframe = isWireframe;
+    }
+  });
+});
+
+// Redimensionar ventana
+@on(@win, "resize", () => {
+  camera.aspect = @win.innerWidth / @win.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(@win.innerWidth, @win.innerHeight);
+});
+
+// Bucle de animacion
+fn animate() {
+  @win.requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+async fn init() {
+  await syncWorld();
+  setInterval(syncWorld, 1500);
+}
+
+init();
+animate();

@@ -1,0 +1,118 @@
+// inspector.osp - Logica de inspeccion por raycasting y filtro de capas Y en Oriented-Direct
+
+val THREE = @win.THREE;
+val Raycaster = THREE.Raycaster;
+val Vector2 = THREE.Vector2;
+
+class Inspector {
+  constructor(camera, scene, domElement) {
+    this.camera = camera;
+    this.scene = scene;
+    this.domElement = domElement;
+    this.raycaster = new Raycaster();
+    this.mouse = new Vector2();
+
+    this.allMeshes = [];
+    this.selectedMesh = null;
+    this.isolateLayer = false;
+    this.currentCutY = 50;
+
+    this.initUI();
+    this.bindEvents();
+  }
+
+  initUI() {
+    this.elEmpty = @id("inspector-empty");
+    this.elDetails = @id("inspector-details");
+    this.elName = @id("insp-name");
+    this.elBedrockId = @id("insp-bedrock-id");
+    this.elCoords = @id("insp-coords");
+    this.elStates = @id("insp-states");
+
+    this.layerSlider = @id("layer-slider");
+    this.layerVal = @id("layer-val");
+    this.btnIsolate = @id("btn-toggle-isolate");
+
+    @on(this.layerSlider, "input", (e) => {
+      this.currentCutY = parseInt(e.target.value, 10);
+      @text(this.layerVal, `Y <= ${this.currentCutY}`);
+      this.applyLayerFilter();
+    });
+
+    @on(this.btnIsolate, "click", () => {
+      this.isolateLayer = not this.isolateLayer;
+      @text(this.btnIsolate, this.isolateLayer ? "Restaurar corte normal" : "Aislar solo esta capa");
+      @css(this.btnIsolate, { "background": this.isolateLayer ? "#388bfd" : "#21262d" });
+      this.applyLayerFilter();
+    });
+  }
+
+  setBlockMeshes(meshArray, maxLayerY) {
+    this.allMeshes = meshArray;
+    val resolvedMax = Math.max(maxLayerY or 20, 10);
+    this.layerSlider.max = resolvedMax;
+    this.layerSlider.value = this.layerSlider.max;
+    this.currentCutY = parseInt(this.layerSlider.value, 10);
+    @text(this.layerVal, "Todas");
+    this.applyLayerFilter();
+  }
+
+  applyLayerFilter() {
+    val total = this.allMeshes.length;
+    for (mut i = 0; i < total; i += 1) {
+      val group = this.allMeshes[i];
+      val y = group.userData.y;
+      if (this.isolateLayer) {
+        group.visible = (y is this.currentCutY);
+      } else {
+        group.visible = (y <= this.currentCutY);
+      }
+    }
+  }
+
+  bindEvents() {
+    @on(this.domElement, "pointerdown", (e) => {
+      val rect = this.domElement.getBoundingClientRect();
+      this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      val intersects = this.raycaster.intersectObjects(this.allMeshes, true);
+
+      if (intersects.length > 0) {
+        mut hitGroup = intersects[0].object;
+        while (hitGroup.parent and not (hitGroup.userData?.bedrockId)) {
+          hitGroup = hitGroup.parent;
+        }
+        this.inspectBlock(hitGroup.userData);
+      }
+    });
+  }
+
+  inspectBlock(data) {
+    if ((not data) or (not data.bedrockId)) return;
+
+    @css(this.elEmpty, { "display": "none" });
+    @css(this.elDetails, { "display": "block" });
+
+    @text(this.elName, data.name);
+    @text(this.elBedrockId, data.bedrockId);
+    @text(this.elCoords, `X: ${data.x} | Y: ${data.y} | Z: ${data.z}`);
+    
+    val statesObj = data.states or {};
+    val keys = Object.keys(statesObj);
+    val parts = [];
+    val totalKeys = keys.length;
+    for (mut i = 0; i < totalKeys; i += 1) {
+      val k = keys[i];
+      val v = statesObj[k];
+      parts.push(`${k}: ${v}`);
+    }
+    val statesText = parts.join(", ");
+    @text(this.elStates, statesText or "(ninguno)");
+  }
+}
+
+export fn createInspector(camera, scene, domElement) {
+  return new Inspector(camera, scene, domElement);
+}

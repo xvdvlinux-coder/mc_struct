@@ -1,0 +1,25 @@
+{
+  "name": "evento-devbuild",
+  "version": "1.0.0",
+  "description": "Minecraft Bedrock architectural engine and visualizer rewritten in Oriented-Direct (.osp)",
+  "main": "src/server.osp",
+  "scripts": {
+    "build": "ospc build --public --sourcemap",
+    "dev": "ospc run src/server.osp",
+    "start": "ospc run src/server.osp"
+  },
+  "osp": {
+    "entry": "src/viewer.osp",
+    "outDir": "public",
+    "outFile": "app.js",
+    "bundle": true,
+    "sourcemap": true,
+    "port": 3000
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "express": "^4.21.2",
+    "three": "^0.174.0",
+    "ws": "^8.18.1"
+  }
+}

@@ -1,0 +1,26 @@
+// blocks/metals.osp - Metales preciosos, gemas, cobre y minerales
+
+import { createBlock } from "./utils.osp";
+
+export val METAL_BLOCKS = {
+  // Metales Preciosos
+  "gold_block": createBlock("minecraft:gold_block", "Bloque de Oro", "cube", 0xF7C631, { "metalness": 0.85, "roughness": 0.2 }),
+  "iron_block": createBlock("minecraft:iron_block", "Bloque de Hierro", "cube", 0xDCDCDC, { "metalness": 0.8, "roughness": 0.3 }),
+  "netherite_block": createBlock("minecraft:netherite_block", "Bloque de Inframundita", "cube", 0x3E383A, { "metalness": 0.8, "roughness": 0.3 }),
+
+  // Gemas y Minerales de Gala
+  "diamond_block": createBlock("minecraft:diamond_block", "Bloque de Diamante", "cube", 0x62E3D9, { "metalness": 0.3, "roughness": 0.1 }),
+  "emerald_block": createBlock("minecraft:emerald_block", "Bloque de Esmeralda", "cube", 0x17DD62, { "metalness": 0.3, "roughness": 0.1 }),
+  "lapis_block": createBlock("minecraft:lapis_block", "Bloque de Lapislazuli", "cube", 0x1E438C, { "roughness": 0.4 }),
+  "amethyst_block": createBlock("minecraft:amethyst_block", "Bloque de Amatista", "cube", 0x8661A3, { "roughness": 0.3 }),
+
+  // Cobres
+  "copper_block": createBlock("minecraft:copper_block", "Bloque de Cobre", "cube", 0xC06B4F, { "metalness": 0.7, "roughness": 0.3 }),
+  "cut_copper": createBlock("minecraft:cut_copper", "Cobre Cortado", "cube", 0xBF674B, { "metalness": 0.7, "roughness": 0.3 }),
+  "cut_copper_stairs": createBlock("minecraft:cut_copper_stairs", "Escaleras de Cobre Cortado", "stair", 0xBF674B, { "metalness": 0.7, "roughness": 0.3 }),
+  "cut_copper_slab": createBlock("minecraft:cut_copper_slab", "Losa de Cobre Cortado", "slab", 0xBF674B, { "metalness": 0.7, "roughness": 0.3 }),
+
+  // Ferreteria y Seguridad
+  "iron_bars": createBlock("minecraft:iron_bars", "Barrotes de Hierro", "bars", 0x8A8E94, { "metalness": 0.85, "roughness": 0.25 }),
+  "chain": createBlock("minecraft:chain", "Cadena", "chain", 0x36373A, { "metalness": 0.9, "roughness": 0.3 })
+};

@@ -1,0 +1,17 @@
+// blocks/decorations.osp - Vegetacion, librerias y detalles arquitectonicos
+
+import { createBlock } from "./utils.osp";
+
+export val DECORATION_BLOCKS = {
+  // Hojas y Jardineria de Gala
+  "flowering_azalea_leaves": createBlock("minecraft:azalea_leaves_flowered", "Hojas de Azalea con Flores", "cube", 0x56753A, { "roughness": 0.9 }),
+  "azalea_leaves": createBlock("minecraft:azalea_leaves", "Hojas de Azalea", "cube", 0x516D37, { "roughness": 0.9 }),
+  "oak_leaves": createBlock("minecraft:oak_leaves", "Hojas de Roble", "cube", 0x486E2A, { "roughness": 0.9 }),
+  "cherry_leaves": createBlock("minecraft:cherry_leaves", "Hojas de Cerezo", "cube", 0xF2B6CA, { "roughness": 0.8 }),
+  "dark_oak_leaves": createBlock("minecraft:dark_oak_leaves", "Hojas de Roble Oscuro", "cube", 0x334E1D, { "roughness": 0.9 }),
+
+  // Mobiliario y Utileria
+  "bookshelf": createBlock("minecraft:bookshelf", "Libreria", "cube", 0x695033, { "roughness": 0.7 }),
+  "chiseled_bookshelf": createBlock("minecraft:chiseled_bookshelf", "Libreria Cincelada", "cube", 0x735535, { "roughness": 0.7 }),
+  "anvil": createBlock("minecraft:anvil", "Yunque", "cube", 0x484848, { "metalness": 0.85, "roughness": 0.4 })
+};

@@ -1,0 +1,70 @@
+// blocks/quartz.osp - Bloques de cuarzo y marmoles blancos
+
+export val QUARTZ_BLOCKS = {
+  "smooth_quartz": {
+    "bedrockId": "minecraft:smooth_quartz",
+    "shape": "cube",
+    "color": 0xF2ECE4,
+    "roughness": 0.2,
+    "name": "Cuarzo Liso"
+  },
+  "quartz_block": {
+    "bedrockId": "minecraft:quartz_block",
+    "shape": "cube",
+    "color": 0xEAE4DC,
+    "roughness": 0.3,
+    "name": "Bloque de Cuarzo"
+  },
+  "quartz_bricks": {
+    "bedrockId": "minecraft:quartz_bricks",
+    "shape": "cube",
+    "color": 0xDFD9CF,
+    "roughness": 0.4,
+    "name": "Ladrillos de Cuarzo"
+  },
+  "chiseled_quartz_block": {
+    "bedrockId": "minecraft:chiseled_quartz_block",
+    "shape": "cube",
+    "color": 0xE2DCD4,
+    "roughness": 0.3,
+    "name": "Cuarzo Cincelado"
+  },
+  "quartz_pillar": {
+    "bedrockId": "minecraft:quartz_pillar",
+    "shape": "pillar",
+    "color": 0xE5DFD7,
+    "roughness": 0.3,
+    "name": "Pilar de Cuarzo",
+    "defaultStates": { "axis": "y" }
+  },
+  "smooth_quartz_stairs": {
+    "bedrockId": "minecraft:smooth_quartz_stairs",
+    "shape": "stair",
+    "color": 0xF2ECE4,
+    "roughness": 0.2,
+    "name": "Escaleras de Cuarzo Liso",
+    "defaultStates": { "facing": "north", "half": "bottom" }
+  },
+  "smooth_quartz_slab": {
+    "bedrockId": "minecraft:smooth_quartz_slab",
+    "shape": "slab",
+    "color": 0xF2ECE4,
+    "roughness": 0.2,
+    "name": "Losa de Cuarzo Liso",
+    "defaultStates": { "half": "bottom" }
+  },
+  "calcite": {
+    "bedrockId": "minecraft:calcite",
+    "shape": "cube",
+    "color": 0xDFDFD9,
+    "roughness": 0.7,
+    "name": "Calcita"
+  },
+  "polished_diorite": {
+    "bedrockId": "minecraft:polished_diorite",
+    "shape": "cube",
+    "color": 0xC8C8C8,
+    "roughness": 0.3,
+    "name": "Diorita Pulida"
+  }
+};

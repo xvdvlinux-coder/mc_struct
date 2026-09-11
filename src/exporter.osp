@@ -1,0 +1,111 @@
+// exporter.osp - Genera coordinates.json, build.log y archivo .mcfunction para Minecraft Bedrock en Oriented-Direct
+
+val fs = process.getBuiltinModule("fs");
+val path = process.getBuiltinModule("path");
+
+class Exporter {
+  constructor(outputDir = "./output") {
+    this.outputDir = path.resolve(outputDir);
+    unless (fs.existsSync(this.outputDir)) {
+      fs.mkdirSync(this.outputDir, { "recursive": true });
+    }
+  }
+
+  exportAll(world, filenamePrefix = "test_structure") {
+    val serialized = world.serialize();
+    val bounds = serialized.bounds;
+
+    // 1. Exportar coordinates.json
+    val coordsPath = path.join(this.outputDir, "coordinates.json");
+    fs.writeFileSync(coordsPath, JSON.stringify(serialized, null, 2), "utf-8");
+
+    // 2. Exportar build.log
+    val logContent = this._generateLog(serialized);
+    val logPath = path.join(this.outputDir, "build.log");
+    fs.writeFileSync(logPath, logContent, "utf-8");
+
+    // 3. Exportar .mcfunction ordenado por Y ascendente (cimientos primero)
+    val mcfunctionContent = this._generateMcFunction(world);
+    val mcfunctionPath = path.join(this.outputDir, `${filenamePrefix}.mcfunction`);
+    fs.writeFileSync(mcfunctionPath, mcfunctionContent, "utf-8");
+
+    return {
+      "coordsPath": coordsPath,
+      "logPath": logPath,
+      "mcfunctionPath": mcfunctionPath,
+      "totalBlocks": bounds.total
+    };
+  }
+
+  _generateLog(serialized) {
+    val bounds = serialized.bounds;
+    val blocks = serialized.blocks;
+    val blockCounts = {};
+    val layerCounts = {};
+
+    val totalBlocks = blocks.length;
+    for (mut i = 0; i < totalBlocks; i += 1) {
+      val b = blocks[i];
+      blockCounts[b.name] = (blockCounts[b.name] or 0) + 1;
+      layerCounts[b.y] = (layerCounts[b.y] or 0) + 1;
+    }
+
+    val lines = [
+      "====================================================",
+      "        AUDITORIA DE ESTRUCTURA - MINECRAFT BEDROCK",
+      "====================================================",
+      `Fecha: ${new Date().toLocaleString()}`,
+      `Total de Bloques: ${bounds.total}`,
+      `Dimensiones (X x Y x Z): ${bounds.dimensions.x} x ${bounds.dimensions.y} x ${bounds.dimensions.z}`,
+      `Limites: [${bounds.min.x}, ${bounds.min.y}, ${bounds.min.z}] hasta [${bounds.max.x}, ${bounds.max.y}, ${bounds.max.z}]`,
+      "",
+      "--- DESGLOSE POR TIPO DE BLOQUE ---"
+    ];
+
+    val entries = Object.entries(blockCounts).sort((a, b) => b[1] - a[1]);
+    val totalEntries = entries.length;
+    for (mut i = 0; i < totalEntries; i += 1) {
+      val entry = entries[i];
+      val name = entry[0];
+      val count = entry[1];
+      lines.push(`  • ${name.padEnd(28, " ")} : ${count} bloques`);
+    }
+
+    lines.push("", "--- DESGLOSE POR CAPAS (ALTURA Y) ---");
+    val sortedLayers = Object.keys(layerCounts).map(Number).sort((a, b) => a - b);
+    val totalLayers = sortedLayers.length;
+    for (mut i = 0; i < totalLayers; i += 1) {
+      val y = sortedLayers[i];
+      lines.push(`  Capa Y = ${String(y).padStart(3, " ")} : ${layerCounts[y]} bloques`);
+    }
+
+    lines.push("====================================================");
+    return lines.join("\n");
+  }
+
+  _generateMcFunction(world) {
+    // Ordenar de menor a mayor Y para que las bases se creen antes que las alfombras o faroles
+    val sortedEntries = Array["from"](world.blocks.values()).sort((a, b) => {
+      if (a.coord.y is not b.coord.y) return a.coord.y - b.coord.y;
+      if (a.coord.z is not b.coord.z) return a.coord.z - b.coord.z;
+      return a.coord.x - b.coord.x;
+    });
+
+    val commands = [
+      "# Archivo .mcfunction generado para Minecraft Bedrock",
+      `# Total de bloques: ${sortedEntries.length}`,
+      "# Ejecutar con: /function <nombre_archivo>",
+      ""
+    ];
+
+    val totalSorted = sortedEntries.length;
+    for (mut i = 0; i < totalSorted; i += 1) {
+      val entry = sortedEntries[i];
+      commands.push(entry.block.toBedrockCommand(entry.coord));
+    }
+
+    return commands.join("\n");
+  }
+}
+
+export { Exporter };

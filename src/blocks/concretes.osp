@@ -1,0 +1,27 @@
+// blocks/concretes.osp - Hormigones y terracotas de colores para suelos de diseno y logotipos
+
+import { createBlock } from "./utils.osp";
+
+export val CONCRETE_BLOCKS = {
+  "white_concrete": createBlock("minecraft:white_concrete", "Hormigon Blanco", "cube", 0xD0D5D6, { "roughness": 0.8 }),
+  "light_gray_concrete": createBlock("minecraft:light_gray_concrete", "Hormigon Gris Claro", "cube", 0x7D7D73, { "roughness": 0.8 }),
+  "gray_concrete": createBlock("minecraft:gray_concrete", "Hormigon Gris", "cube", 0x36393D, { "roughness": 0.8 }),
+  "black_concrete": createBlock("minecraft:black_concrete", "Hormigon Negro", "cube", 0x080A0F, { "roughness": 0.8 }),
+  "red_concrete": createBlock("minecraft:red_concrete", "Hormigon Rojo", "cube", 0x8E2020, { "roughness": 0.8 }),
+  "orange_concrete": createBlock("minecraft:orange_concrete", "Hormigon Naranja", "cube", 0xE06100, { "roughness": 0.8 }),
+  "yellow_concrete": createBlock("minecraft:yellow_concrete", "Hormigon Amarillo", "cube", 0xF1AF15, { "roughness": 0.8 }),
+  "lime_concrete": createBlock("minecraft:lime_concrete", "Hormigon Lima", "cube", 0x5EA818, { "roughness": 0.8 }),
+  "green_concrete": createBlock("minecraft:green_concrete", "Hormigon Verde", "cube", 0x495B24, { "roughness": 0.8 }),
+  "cyan_concrete": createBlock("minecraft:cyan_concrete", "Hormigon Cian", "cube", 0x157788, { "roughness": 0.8 }),
+  "light_blue_concrete": createBlock("minecraft:light_blue_concrete", "Hormigon Azul Claro", "cube", 0x2389C6, { "roughness": 0.8 }),
+  "blue_concrete": createBlock("minecraft:blue_concrete", "Hormigon Azul", "cube", 0x2C2E8F, { "roughness": 0.8 }),
+  "purple_concrete": createBlock("minecraft:purple_concrete", "Hormigon Morado", "cube", 0x641F9C, { "roughness": 0.8 }),
+  "magenta_concrete": createBlock("minecraft:magenta_concrete", "Hormigon Magenta", "cube", 0xA9309F, { "roughness": 0.8 }),
+  "pink_concrete": createBlock("minecraft:pink_concrete", "Hormigon Rosa", "cube", 0xD5658E, { "roughness": 0.8 }),
+
+  // Terracotas
+  "terracotta": createBlock("minecraft:terracotta", "Terracota Natural", "cube", 0x985E43, { "roughness": 0.85 }),
+  "white_terracotta": createBlock("minecraft:white_terracotta", "Terracota Blanca", "cube", 0xD1B1A1, { "roughness": 0.85 }),
+  "black_terracotta": createBlock("minecraft:black_terracotta", "Terracota Negra", "cube", 0x251610, { "roughness": 0.85 }),
+  "orange_terracotta": createBlock("minecraft:orange_terracotta", "Terracota Naranja", "cube", 0xA15325, { "roughness": 0.85 })
+};

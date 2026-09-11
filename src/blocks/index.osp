@@ -1,0 +1,27 @@
+// blocks/index.osp - Exportador unificado de todos los catalogos modulares en Oriented-Direct
+
+import { QUARTZ_BLOCKS } from "./quartz.osp";
+import { DEEPSLATE_BLOCKS } from "./deepslate.osp";
+import { WOOD_BLOCKS } from "./woods.osp";
+import { STONE_BLOCKS } from "./stones.osp";
+import { SANDSTONE_BLOCKS } from "./sandstones.osp";
+import { NETHER_BLOCKS } from "./nether.osp";
+import { METAL_BLOCKS } from "./metals.osp";
+import { CONCRETE_BLOCKS } from "./concretes.osp";
+import { LIGHT_BLOCKS } from "./lights.osp";
+import { DECORATION_BLOCKS } from "./decorations.osp";
+import { FABRICS_AND_GLASS } from "./fabrics_glass.osp";
+
+export val BLOCK_REGISTRY = {
+  ...QUARTZ_BLOCKS,
+  ...DEEPSLATE_BLOCKS,
+  ...WOOD_BLOCKS,
+  ...STONE_BLOCKS,
+  ...SANDSTONE_BLOCKS,
+  ...NETHER_BLOCKS,
+  ...METAL_BLOCKS,
+  ...CONCRETE_BLOCKS,
+  ...LIGHT_BLOCKS,
+  ...DECORATION_BLOCKS,
+  ...FABRICS_AND_GLASS
+};

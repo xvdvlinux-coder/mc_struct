@@ -1,0 +1,30 @@
+// blocks/sandstones.osp - Areniscas, prismarina, purpur y bloques del fin
+
+import { createBlock } from "./utils.osp";
+
+export val SANDSTONE_BLOCKS = {
+  // Arenisca Dorada
+  "sandstone": createBlock("minecraft:sandstone", "Arenisca", "cube", 0xD8CA9B),
+  "smooth_sandstone": createBlock("minecraft:smooth_sandstone", "Arenisca Lisa", "cube", 0xDFD2A5),
+  "smooth_sandstone_stairs": createBlock("minecraft:smooth_sandstone_stairs", "Escaleras de Arenisca", "stair", 0xDFD2A5),
+  "smooth_sandstone_slab": createBlock("minecraft:smooth_sandstone_slab", "Losa de Arenisca", "slab", 0xDFD2A5),
+  "chiseled_sandstone": createBlock("minecraft:chiseled_sandstone", "Arenisca Cincelada", "cube", 0xD2C496),
+
+  // Arenisca Roja
+  "red_sandstone": createBlock("minecraft:red_sandstone", "Arenisca Roja", "cube", 0xB85721),
+  "smooth_red_sandstone": createBlock("minecraft:smooth_red_sandstone", "Arenisca Roja Lisa", "cube", 0xB6551F),
+  "smooth_red_sandstone_stairs": createBlock("minecraft:smooth_red_sandstone_stairs", "Escaleras de Arenisca Roja", "stair", 0xB6551F),
+
+  // Prismarina y Monumentos Marinos
+  "prismarine": createBlock("minecraft:prismarine", "Prismarina", "cube", 0x629C91),
+  "prismarine_bricks": createBlock("minecraft:prismarine_bricks", "Ladrillos de Prismarina", "cube", 0x61A89D),
+  "dark_prismarine": createBlock("minecraft:dark_prismarine", "Prismarina Oscura", "cube", 0x345A4F),
+  "dark_prismarine_stairs": createBlock("minecraft:dark_prismarine_stairs", "Escaleras de Prismarina Oscura", "stair", 0x345A4F),
+
+  // Purpur y End Stone
+  "purpur_block": createBlock("minecraft:purpur_block", "Bloque de Purpura", "cube", 0xA877A8),
+  "purpur_pillar": createBlock("minecraft:purpur_pillar", "Pilar de Purpura", "pillar", 0xA877A8),
+  "purpur_stairs": createBlock("minecraft:purpur_stairs", "Escaleras de Purpura", "stair", 0xA877A8),
+  "end_stone": createBlock("minecraft:end_stone", "Piedra del End", "cube", 0xDEE6A4),
+  "end_stone_bricks": createBlock("minecraft:end_stone_bricks", "Ladrillos de Piedra del End", "cube", 0xD9E29F)
+};

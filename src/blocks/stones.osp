@@ -1,0 +1,35 @@
+// blocks/stones.osp - Rocas, canteria, ladrillos y piedras pulidas
+
+import { createBlock } from "./utils.osp";
+
+export val STONE_BLOCKS = {
+  // Piedra y Canteria Clasica
+  "stone": createBlock("minecraft:stone", "Piedra", "cube", 0x7E7E7E),
+  "smooth_stone": createBlock("minecraft:smooth_stone", "Piedra Lisa", "cube", 0x9E9E9E),
+  "smooth_stone_slab": createBlock("minecraft:smooth_stone_slab", "Losa de Piedra Lisa", "slab", 0x9E9E9E),
+  "stone_bricks": createBlock("minecraft:stone_bricks", "Ladrillos de Piedra", "cube", 0x767676),
+  "stone_brick_stairs": createBlock("minecraft:stone_brick_stairs", "Escaleras de Ladrillos de Piedra", "stair", 0x767676),
+  "stone_brick_slab": createBlock("minecraft:stone_brick_slab", "Losa de Ladrillos de Piedra", "slab", 0x767676),
+  "chiseled_stone_bricks": createBlock("minecraft:chiseled_stone_bricks", "Ladrillos Cincelados", "cube", 0x747474),
+  "cracked_stone_bricks": createBlock("minecraft:cracked_stone_bricks", "Ladrillos Agrietados", "cube", 0x707070),
+
+  // Andesita
+  "andesite": createBlock("minecraft:andesite", "Andesita", "cube", 0x868686),
+  "polished_andesite": createBlock("minecraft:polished_andesite", "Andesita Pulida", "cube", 0x828282),
+  "polished_andesite_stairs": createBlock("minecraft:polished_andesite_stairs", "Escaleras de Andesita Pulida", "stair", 0x828282),
+  "polished_andesite_slab": createBlock("minecraft:polished_andesite_slab", "Losa de Andesita Pulida", "slab", 0x828282),
+
+  // Granito
+  "granite": createBlock("minecraft:granite", "Granito", "cube", 0x996857),
+  "polished_granite": createBlock("minecraft:polished_granite", "Granito Pulido", "cube", 0x9C6B5A),
+  "polished_granite_stairs": createBlock("minecraft:polished_granite_stairs", "Escaleras de Granito Pulido", "stair", 0x9C6B5A),
+
+  // Ladrillos de Arcilla y Barro
+  "brick_block": createBlock("minecraft:brick_block", "Ladrillos Rojos", "cube", 0x975747),
+  "brick_stairs": createBlock("minecraft:brick_stairs", "Escaleras de Ladrillos Rojos", "stair", 0x975747),
+  "mud_bricks": createBlock("minecraft:mud_bricks", "Ladrillos de Barro", "cube", 0x88674F),
+
+  // Adoquines
+  "cobblestone": createBlock("minecraft:cobblestone", "Adoquin", "cube", 0x6E6E6E),
+  "mossy_stone_bricks": createBlock("minecraft:mossy_stone_bricks", "Ladrillos de Piedra Musgosa", "cube", 0x6B7563)
+};

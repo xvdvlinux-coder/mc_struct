@@ -1,0 +1,88 @@
+// types.osp - Matematicas vectoriales, definiciones de Bloques y mapeos Bedrock en Oriented-Direct
+
+import { BLOCK_REGISTRY } from "./blocks/index.osp";
+
+class Vec3 {
+  constructor(x = 0, y = 0, z = 0) {
+    this.x = Math.round(x);
+    this.y = Math.round(y);
+    this.z = Math.round(z);
+  }
+
+  add(other) {
+    return new Vec3(this.x + other.x, this.y + other.y, this.z + other.z);
+  }
+
+  sub(other) {
+    return new Vec3(this.x - other.x, this.y - other.y, this.z - other.z);
+  }
+
+  clone() {
+    return new Vec3(this.x, this.y, this.z);
+  }
+
+  equals(other) {
+    return (this.x is other.x) and (this.y is other.y) and (this.z is other.z);
+  }
+
+  toKey() {
+    return `${this.x},${this.y},${this.z}`;
+  }
+
+  static fromKey(key) {
+    val parts = key.split(",").map(Number);
+    return new Vec3(parts[0], parts[1], parts[2]);
+  }
+}
+
+// Representa una instancia de bloque con su identificador y estados especificos
+class Block {
+  constructor(id, states = {}) {
+    unless (BLOCK_REGISTRY[id]) {
+      throw new Error(`Bloque no reconocido en BLOCK_REGISTRY: "${id}". Revisa registry.`);
+    }
+    this.id = id;
+    val def = BLOCK_REGISTRY[id];
+    this.definition = def;
+    val baseStates = def.defaultStates or {};
+    this.states = { ...baseStates, ...states };
+  }
+
+  // Genera la sintaxis exacta de Bedrock con sus estados entre corchetes
+  toBedrockCommand(coord) {
+    val def = this.definition;
+    val states = this.states;
+    val stateEntries = [];
+
+    // Mapeo de estados de escaleras en Bedrock
+    if (def.shape is "stair") {
+      val dirMap = { "east": 0, "west": 1, "south": 2, "north": 3 };
+      val weirdo = (dirMap[states.facing] is not undefined) ? dirMap[states.facing] : 3;
+      val upsideDown = (states.half is "top");
+      stateEntries.push(`"weirdo_direction":${weirdo}`);
+      stateEntries.push(`"upside_down_bit":${upsideDown}`);
+    }
+
+    // Mapeo de pilares en Bedrock
+    if (def.shape is "pillar") {
+      val axis = states.axis or "y";
+      stateEntries.push(`"pillar_axis":"${axis}"`);
+    }
+
+    // Mapeo de losas en Bedrock
+    if (def.shape is "slab") {
+      val topSlot = (states.half is "top");
+      stateEntries.push(`"top_slot_bit":${topSlot}`);
+    }
+
+    // Mapeo de faroles en Bedrock
+    if (def.shape is "lantern") {
+      stateEntries.push(`"hanging":${Boolean(states.hanging)}`);
+    }
+
+    val stateStr = (stateEntries.length > 0) ? ` [${stateEntries.join(",")}]` : "";
+    return `setblock ~${coord.x} ~${coord.y} ~${coord.z} ${def.bedrockId}${stateStr}`;
+  }
+}
+
+export { Vec3, Block, BLOCK_REGISTRY };

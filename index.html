@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Bedrock 3D - Arquitectura & Inspeccion (Oriented-Direct)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Canvas 3D -->
+  <div id="canvas-container"></div>
+
+  <!-- Panel Superior: Estadisticas y Estado -->
+  <header id="top-bar">
+    <div class="logo">
+      <span class="badge">MC BEDROCK</span>
+      <strong>3D ARCHITECTURE INSPECTOR (.OSP)</strong>
+    </div>
+    <div class="stats-group">
+      <div class="stat-item">
+        <span class="label">Total Bloques:</span>
+        <span id="stat-total-blocks" class="val">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Dimensiones:</span>
+        <span id="stat-dimensions" class="val">0 x 0 x 0</span>
+      </div>
+      <div class="stat-item">
+        <span class="status-indicator" id="connection-status" title="Clic para conectar en vivo">Modo Local</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Panel Izquierdo: Controles de Inspeccion y Capas -->
+  <aside id="controls-panel">
+    <h3>INSPECCION TECNICA</h3>
+    
+    <div class="control-section">
+      <label for="layer-slider">Corte por Capa (Altura Y):</label>
+      <div class="slider-row">
+        <input type="range" id="layer-slider" min="0" max="50" value="50">
+        <span id="layer-val">Todas</span>
+      </div>
+      <button id="btn-toggle-isolate" class="btn-subtle">Aislar solo esta capa</button>
+    </div>
+
+    <div class="control-section">
+      <label>Vistas de Camara:</label>
+      <div class="btn-grid">
+        <button id="btn-view-iso" class="btn">3D Iso</button>
+        <button id="btn-view-top" class="btn">Planta (Top)</button>
+        <button id="btn-view-front" class="btn">Frente</button>
+        <button id="btn-view-side" class="btn">Lateral</button>
+      </div>
+    </div>
+
+    <div class="control-section">
+      <label>Opciones Visuales:</label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="chk-grid" checked> Mostrar cuadricula y ejes
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="chk-wireframe"> Modo wireframe
+      </label>
+    </div>
+
+    <!-- Inspector de Bloque al pasar el cursor o hacer clic -->
+    <div id="inspector-card" class="card">
+      <h4>BLOQUE SELECCIONADO</h4>
+      <div id="inspector-empty">Haz clic o pasa el cursor sobre un bloque</div>
+      <div id="inspector-details" style="display: none;">
+        <div class="info-row"><strong>Nombre:</strong> <span id="insp-name"></span></div>
+        <div class="info-row"><strong>ID Bedrock:</strong> <span id="insp-bedrock-id"></span></div>
+        <div class="info-row"><strong>Coordenadas:</strong> <span id="insp-coords"></span></div>
+        <div class="info-row"><strong>Estados:</strong> <span id="insp-states"></span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mensaje flotante de error o estado -->
+  <div id="toast-message" class="toast"></div>
+
+  <!-- Three.js 0.174.0 y OrbitControls nativos coincidentes con la version original -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.174.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.174.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    window.THREE = THREE;
+    window.OrbitControls = OrbitControls;
+    import('./app.js');
+  </script>
+</body>
+</html>

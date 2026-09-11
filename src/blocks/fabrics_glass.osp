@@ -1,0 +1,28 @@
+// blocks/fabrics_glass.osp - Alfombras, lanas y cristales
+
+import { createBlock } from "./utils.osp";
+
+export val FABRICS_AND_GLASS = {
+  // Alfombras Finas (Grosor 1/16)
+  "red_carpet": createBlock("minecraft:red_carpet", "Alfombra Roja", "carpet", 0xB51D1D, { "roughness": 0.9 }),
+  "yellow_carpet": createBlock("minecraft:yellow_carpet", "Alfombra Dorada", "carpet", 0xF3C12A, { "roughness": 0.9 }),
+  "black_carpet": createBlock("minecraft:black_carpet", "Alfombra Negra", "carpet", 0x161618, { "roughness": 0.9 }),
+  "white_carpet": createBlock("minecraft:white_carpet", "Alfombra Blanca", "carpet", 0xF6F6F6, { "roughness": 0.9 }),
+  "blue_carpet": createBlock("minecraft:blue_carpet", "Alfombra Azul", "carpet", 0x2A3B8F, { "roughness": 0.9 }),
+  "cyan_carpet": createBlock("minecraft:cyan_carpet", "Alfombra Cian", "carpet", 0x157788, { "roughness": 0.9 }),
+  "purple_carpet": createBlock("minecraft:purple_carpet", "Alfombra Morada", "carpet", 0x641F9C, { "roughness": 0.9 }),
+  "gray_carpet": createBlock("minecraft:gray_carpet", "Alfombra Gris", "carpet", 0x3E4447, { "roughness": 0.9 }),
+
+  // Lanas
+  "red_wool": createBlock("minecraft:red_wool", "Lana Roja", "cube", 0x9B1C1C, { "roughness": 0.9 }),
+  "black_wool": createBlock("minecraft:black_wool", "Lana Negra", "cube", 0x141519, { "roughness": 0.9 }),
+  "white_wool": createBlock("minecraft:white_wool", "Lana Blanca", "cube", 0xE4E4E4, { "roughness": 0.9 }),
+  "blue_wool": createBlock("minecraft:blue_wool", "Lana Azul", "cube", 0x2C2E8F, { "roughness": 0.9 }),
+
+  // Cristales y Paneles
+  "glass": createBlock("minecraft:glass", "Cristal Transparente", "glass", 0xDDF0FF, { "opacity": 0.35, "transparent": true }),
+  "tinted_glass": createBlock("minecraft:tinted_glass", "Cristal Tintado", "glass", 0x261E2E, { "opacity": 0.7, "transparent": true }),
+  "black_stained_glass": createBlock("minecraft:black_stained_glass", "Cristal Negro", "glass", 0x181818, { "opacity": 0.6, "transparent": true }),
+  "white_stained_glass": createBlock("minecraft:white_stained_glass", "Cristal Blanco", "glass", 0xEAEAEA, { "opacity": 0.5, "transparent": true }),
+  "glass_pane": createBlock("minecraft:glass_pane", "Panel de Cristal", "pane", 0xDDF0FF, { "opacity": 0.4, "transparent": true })
+};

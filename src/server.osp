@@ -1,0 +1,146 @@
+// server.osp - Servidor Express + WebSocket + File Watcher para main.osp en Oriented-Direct
+
+val http = process.getBuiltinModule("http");
+val fs = process.getBuiltinModule("fs");
+val path = process.getBuiltinModule("path");
+val express = require("express");
+val ws = require("ws");
+val WebSocketServer = ws.WebSocketServer;
+val chokidar = require("chokidar");
+
+import { Vec3, Block } from "./types.osp";
+import { World3D, Symmetry } from "./world.osp";
+import { Exporter } from "./exporter.osp";
+
+val PORT = 3000;
+val app = express();
+val server = http.createServer(app);
+val wss = new WebSocketServer({ "server": server });
+val exporter = new Exporter("./output");
+
+// Servir archivos estaticos
+app.use(express["static"]("public"));
+app.use("/three", express["static"](path.resolve("../node_modules/three")));
+
+mut latestWorldData = null;
+
+fn broadcast(data) {
+  val payload = JSON.stringify(data);
+  val clients = Array["from"](wss.clients);
+  val total = clients.length;
+  for (mut i = 0; i < total; i += 1) {
+    val client = clients[i];
+    if (client.readyState is 1) {
+      client.send(payload);
+    }
+  }
+}
+
+// Ejecuta el codigo de main.block y exporta resultados
+async fn runMainBlock(filePath = null) {
+  mut targetPath = filePath;
+  unless (targetPath and fs.existsSync(targetPath)) {
+    val localPath = path.resolve("main.block");
+    val rootPath = path.resolve("../main.block");
+    val hasLocal = fs.existsSync(localPath);
+    val hasRoot = fs.existsSync(rootPath);
+    if (hasLocal and hasRoot) {
+      val localM = fs.statSync(localPath).mtimeMs;
+      val rootM = fs.statSync(rootPath).mtimeMs;
+      targetPath = (rootM > localM) ? rootPath : localPath;
+    } else if (hasLocal) {
+      targetPath = localPath;
+    } else if (hasRoot) {
+      targetPath = rootPath;
+    }
+  }
+
+  unless (targetPath and fs.existsSync(targetPath)) {
+    @log("[Server] main.block no existe todavia.");
+    return;
+  }
+
+  try {
+    @log(`\n[Server] Ejecutando ${path.basename(targetPath)}...`);
+    val code = fs.readFileSync(targetPath, "utf-8");
+    val world = new World3D();
+
+    // Entorno de ejecucion con inyeccion de dependencias
+    val context = {
+      "world": world,
+      "Vec3": (x, y, z) => new Vec3(x, y, z),
+      "Block": (id, states) => new Block(id, states),
+      "Symmetry": Symmetry,
+      "console": console,
+      "Math": Math,
+      "set": (x, y, z, id, states = {}) => world.setBlock(new Vec3(x, y, z), new Block(id, states)),
+      "fillBox": (x1, y1, z1, x2, y2, z2, id, states = {}) => {
+        val minX = Math.min(x1, x2); val maxX = Math.max(x1, x2);
+        val minY = Math.min(y1, y2); val maxY = Math.max(y1, y2);
+        val minZ = Math.min(z1, z2); val maxZ = Math.max(z1, z2);
+        for (mut y = minY; y <= maxY; y += 1) {
+          for (mut z = minZ; z <= maxZ; z += 1) {
+            for (mut x = minX; x <= maxX; x += 1) {
+              world.setBlock(new Vec3(x, y, z), new Block(id, states));
+            }
+          }
+        }
+      }
+    };
+
+    // Ejecutar la funcion constructora
+    val runner = new Function("ctx", `
+      with (ctx) {
+        ${code}
+      }
+    `);
+    runner(context);
+
+    // Exportar archivos (.mcfunction, coordinates.json, build.log)
+    val exportResults = exporter.exportAll(world, "test_structure");
+    latestWorldData = world.serialize();
+
+    // Sincronizar copia estatica para public/
+    val publicDir = path.resolve("public");
+    if (fs.existsSync(publicDir)) {
+      fs.writeFileSync(path.join(publicDir, "coordinates.json"), JSON.stringify(latestWorldData), "utf-8");
+    }
+    fs.writeFileSync(path.resolve("coordinates.json"), JSON.stringify(latestWorldData), "utf-8");
+
+    @log(`[Server] Exito: ${exportResults.totalBlocks} bloques colocados.`);
+    @log(`[Server] Guardado en output/ y enviado al visor 3D.`);
+
+    // Enviar al cliente Three.js via WebSocket
+    broadcast({ "type": "UPDATE_WORLD", "data": latestWorldData });
+
+  } catch (err) {
+    @error("[Server Error en script]:", err.message);
+    broadcast({ "type": "BUILD_ERROR", "error": err.message });
+  }
+}
+
+// Conexion inicial de clientes WebSocket
+wss.on("connection", (ws) => {
+  if (latestWorldData is not null) {
+    ws.send(JSON.stringify({ "type": "UPDATE_WORLD", "data": latestWorldData }));
+  }
+});
+
+// Watcher sobre main.block
+chokidar.watch(["main.block", "../main.block"], {
+  "ignoreInitial": true,
+  "awaitWriteFinish": {
+    "stabilityThreshold": 150,
+    "pollInterval": 50
+  }
+})
+  .on("change", (filePath) => runMainBlock(filePath))
+  .on("add", (filePath) => runMainBlock(filePath));
+
+server.listen(PORT, () => {
+  @log(`\n=================================================`);
+  @log(` Visor 3D Minecraft iniciado en: http://localhost:${PORT}`);
+  @log(` Observando cambios en main.block...`);
+  @log(`=================================================`);
+  runMainBlock();
+});

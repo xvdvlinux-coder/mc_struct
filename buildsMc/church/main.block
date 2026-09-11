@@ -1,0 +1,1032 @@
+// ============================================================================
+// MAIN.BLOCK - CATEDRAL & CASTILLO GÓTICO BLANCO CREPUSCULAR MONUMENTAL 3D
+// ============================================================================
+// Réplica fiel, hiper-detallada y de escala colosal de la referencia visual (media_1789020860716.jpg):
+//
+// 1. MATERIALIDAD: MÁRMOL Y CANTERÍA BLANCA PURA (WHITE GOTHIC PALACE):
+//    - Muros, contrafuertes, arquivoltas, pilastras, pináculos y cornisas en cuarzo blanco puro
+//      (quartz_bricks, smooth_quartz, smooth_quartz_stairs, smooth_quartz_slab, quartz_pillar, chiseled_quartz_block).
+//    - Cubiertas, agujas piramidales y conos en pizarra oscura de contraste (deepslate_bricks).
+//    - Iluminación crepuscular ámbar dorada con ochre_froglight y lantern.
+//
+// 2. FACHADA CONTINUA UNIFICADA (CERO TORRES SEPARADAS):
+//    - Toda la fachada frontal es un solo bloque masivo e interconectado de 57 bloques de ancho:
+//      [Torreón Embebido Izq] <==> [Gran Aguja Izq (Y=74)] <==> [Portal & Palacio Central (Y=38)] <==> [Gran Campanario Der (Y=56)] <==> [Torreón Embebido Der].
+//    - Cero fisuras ni espacios de aire entre cuerpos: continuidad arquitectónica absoluta.
+//
+// 3. BASE MACIZA Y ROBUSTA (SIN VENTANAS EN EL CENTRO AL LADO):
+//    - Los muros que flanquean el portal central en planta baja son cantería maciza con contrafuertes escalonados.
+//    - Ventanales góticos ubicados exclusivamente en la hornacina central iluminada, los 3 grandes ventanales superiores y las galerías de campanarios.
+//
+// 4. DETALLES GÓTICOS COMPLEJOS Y PRECISOS:
+//    - Portal abocinado profundo con cuádruple arquivolta escalonada y bóveda ojival.
+//    - Gablete agudo con hornacina vertical dorada y tracería de forja.
+//    - Gran Aguja Izquierda hasta Y = 74 con fuste facetado, belfry abierto, linterna octogonal, aguja y cruz celestial.
+//    - Gran Campanario Derecho hasta Y = 56 con matacanes salientes, galería abierta iluminada y corona de 8 pináculos góticos.
+//    - Interior catedralicio con naves, pilares fasciculados, bóvedas de crucería y presbiterio real.
+// ============================================================================
+
+function set(x, y, z, id, states = {}) {
+  world.setBlock(Vec3(x, y, z), Block(id, states));
+}
+
+function fillBox(x1, y1, z1, x2, y2, z2, id, states = {}) {
+  const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+  const minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+  for (let y = minY; y <= maxY; y++) {
+    for (let z = minZ; z <= maxZ; z++) {
+      for (let x = minX; x <= maxX; x++) {
+        set(x, y, z, id, states);
+      }
+    }
+  }
+}
+
+function fillCylinder(cx, cz, r, y1, y2, id, states = {}) {
+  const rSq = r * r;
+  const iR = Math.ceil(r);
+  for (let y = y1; y <= y2; y++) {
+    for (let dx = -iR; dx <= iR; dx++) {
+      for (let dz = -iR; dz <= iR; dz++) {
+        if (dx * dx + dz * dz <= rSq) {
+          set(cx + dx, y, cz + dz, id, states);
+        }
+      }
+    }
+  }
+}
+
+function hollowCylinder(cx, cz, outerR, innerR, y1, y2, id, states = {}) {
+  const outSq = outerR * outerR;
+  const inSq = innerR * innerR;
+  const iR = Math.ceil(outerR);
+  for (let y = y1; y <= y2; y++) {
+    for (let dx = -iR; dx <= iR; dx++) {
+      for (let dz = -iR; dz <= iR; dz++) {
+        const dSq = dx * dx + dz * dz;
+        if (dSq <= outSq && dSq >= inSq) {
+          set(cx + dx, y, cz + dz, id, states);
+        }
+      }
+    }
+  }
+}
+
+function fillCone(cx, cz, baseR, y1, y2, id, states = {}) {
+  const height = Math.max(1, y2 - y1);
+  for (let y = y1; y <= y2; y++) {
+    const t = (y - y1) / height;
+    const r = Math.max(0.4, baseR * (1.0 - t));
+    const rSq = r * r;
+    const iR = Math.ceil(r);
+    for (let dx = -iR; dx <= iR; dx++) {
+      for (let dz = -iR; dz <= iR; dz++) {
+        if (dx * dx + dz * dz <= rSq) {
+          set(cx + dx, y, cz + dz, id, states);
+        }
+      }
+    }
+  }
+}
+
+function remove(x, y, z) {
+  world.removeBlock(Vec3(x, y, z));
+}
+
+function hollowBox(x1, y1, z1, x2, y2, z2, wallThickness, id, states = {}) {
+  const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+  const minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+  for (let y = minY; y <= maxY; y++) {
+    for (let z = minZ; z <= maxZ; z++) {
+      for (let x = minX; x <= maxX; x++) {
+        const isWall = (x < minX + wallThickness || x > maxX - wallThickness ||
+                        z < minZ + wallThickness || z > maxZ - wallThickness);
+        if (isWall) {
+          set(x, y, z, id, states);
+        }
+      }
+    }
+  }
+}
+
+// Helper para pináculo gótico detallado
+function buildPinnacle(px, py, pz, height = 7) {
+  // Base moldurada
+  set(px, py, pz, 'smooth_quartz');
+  set(px, py + 1, pz, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  // Fuste
+  for (let h = 2; h < height - 3; h++) {
+    set(px, py + h, pz, 'quartz_pillar', { axis: 'y' });
+  }
+  // Capitel / gables
+  set(px, py + height - 3, pz, 'chiseled_quartz_block');
+  set(px, py + height - 2, pz, 'deepslate_bricks');
+  set(px, py + height - 1, pz, 'iron_bars');
+  set(px, py + height, pz, 'end_rod');
+}
+
+// Genera un aro/anillo horizontal continuo alrededor de una torre o aguja
+function ring(cx, cz, r, y, id, states = {}) {
+  const iR = Math.ceil(r + 0.55);
+  const minSq = Math.max(0, (r - 0.55) * (r - 0.55));
+  const maxSq = (r + 0.55) * (r + 0.55);
+  for (let dx = -iR; dx <= iR; dx++) {
+    for (let dz = -iR; dz <= iR; dz++) {
+      const dSq = dx * dx + dz * dz;
+      if (dSq >= minSq && dSq <= maxSq) {
+        set(cx + dx, y, cz + dz, id, states);
+      }
+    }
+  }
+}
+
+// Genera un aro horizontal continuo de escaleras orientadas radialmente hacia el exterior
+function ringStairs(cx, cz, r, y, isUpsideDown = false) {
+  const iR = Math.ceil(r + 0.6);
+  const minSq = Math.max(0, (r - 0.6) * (r - 0.6));
+  const maxSq = (r + 0.6) * (r + 0.6);
+  for (let dx = -iR; dx <= iR; dx++) {
+    for (let dz = -iR; dz <= iR; dz++) {
+      const dSq = dx * dx + dz * dz;
+      if (dSq >= minSq && dSq <= maxSq) {
+        let facing = 'north';
+        if (Math.abs(dx) > Math.abs(dz)) {
+          facing = dx > 0 ? 'east' : 'west';
+        } else {
+          facing = dz > 0 ? 'south' : 'north';
+        }
+        set(cx + dx, y, cz + dz, 'smooth_quartz_stairs', {
+          facing,
+          half: isUpsideDown ? 'top' : 'bottom'
+        });
+      }
+    }
+  }
+}
+
+// Genera un ARO horizontal volado y prominente que sobresale claramente del techo (2 bloques de perfil)
+function boldRing(cx, cz, r, y) {
+  const iR = Math.ceil(r + 0.7);
+  const minSq = Math.max(0, (r - 0.7) * (r - 0.7));
+  const maxSq = (r + 0.7) * (r + 0.7);
+  for (let dx = -iR; dx <= iR; dx++) {
+    for (let dz = -iR; dz <= iR; dz++) {
+      const dSq = dx * dx + dz * dz;
+      if (dSq >= minSq && dSq <= maxSq) {
+        set(cx + dx, y, cz + dz, 'smooth_quartz');
+        set(cx + dx, y + 1, cz + dz, 'smooth_quartz_slab', { half: 'bottom' });
+      }
+    }
+  }
+}
+
+// ============================================================================
+// 1. CIMENTACIÓN BASAL, CALZADA DE ACCESO Y FAROLAS DE GAS (Y = 0)
+// ============================================================================
+// Gran podio basal continuo de soporte (Y = 0)
+fillBox(-38, 0, -20, 38, 0, 14, 'quartz_bricks');
+
+// Calzada empedrada de acceso flanqueada por pretiles de cuarzo (Z = 12 a 32, X = -4 a 4)
+for (let z = 12; z <= 32; z++) {
+  for (let x = -4; x <= 4; x++) {
+    if (Math.abs(x) === 4) {
+      set(x, 0, z, 'stone_bricks');
+      set(x, 1, z, 'smooth_quartz_stairs', { facing: x < 0 ? 'east' : 'west', half: 'bottom' });
+      set(x, 2, z, 'smooth_quartz_slab', { half: 'bottom' });
+    } else {
+      // Pavimento empedrado noble noble de cantería
+      const pat = Math.abs(x * z + z) % 4;
+      set(x, 0, z, (pat === 0) ? 'cobblestone' : (pat === 1 ? 'stone_bricks' : 'polished_blackstone'));
+    }
+  }
+}
+
+// Dos Grandes Farolas Góticas de Gas Victorianas a ambos lados del camino (idénticas a la imagen)
+const streetLamps = [
+  { x: -6, z: 20 },
+  { x:  6, z: 20 }
+];
+for (const lamp of streetLamps) {
+  // Pedestal de cantería moldurada
+  set(lamp.x, 0, lamp.z, 'stone_bricks');
+  set(lamp.x, 1, lamp.z, 'chiseled_quartz_block');
+  set(lamp.x, 2, lamp.z, 'smooth_quartz_stairs', { facing: 'south', half: 'top' });
+  set(lamp.x, 3, lamp.z, 'iron_bars');
+  set(lamp.x, 4, lamp.z, 'iron_bars');
+  set(lamp.x, 5, lamp.z, 'iron_bars');
+  set(lamp.x, 6, lamp.z, 'smooth_quartz_slab', { half: 'top' });
+  set(lamp.x, 7, lamp.z, 'ochre_froglight'); // Foco de gas cálido dorado
+  set(lamp.x, 8, lamp.z, 'iron_bars');
+  set(lamp.x, 9, lamp.z, 'lantern', { hanging: false });
+}
+
+// Vegetación crepuscular baja y arbustos góticos flanqueando el camino
+for (let z = 14; z <= 30; z += 3) {
+  set(-7, 0, z, 'flowering_azalea_leaves');
+  set(-7, 1, z, 'oak_leaves');
+  set( 7, 0, z, 'flowering_azalea_leaves');
+  set( 7, 1, z, 'oak_leaves');
+}
+
+// ============================================================================
+// 2. CUERPO CENTRAL: NAVE CATEDRALICIA E INTERIOR COMPLETO (X = -8 a 8, Z = -18 a 8)
+// ============================================================================
+// Suelo principal del templo en cuarzo (Y = 1)
+fillBox(-8, 1, -18, 8, 1, 8, 'quartz_bricks');
+
+// Alfombra ceremonial imperial en la nave mayor (Z = -14 a 8, Y = 2)
+for (let z = -14; z <= 8; z++) {
+  set( 0, 2, z, 'red_carpet');
+  set(-1, 2, z, 'yellow_carpet');
+  set( 1, 2, z, 'yellow_carpet');
+}
+
+// Columnata interior fasciculada: 8 grandes pilares de cuarzo
+const navePillars = [
+  { x: -4, z: -14 }, { x: 4, z: -14 },
+  { x: -4, z:  -9 }, { x: 4, z:  -9 },
+  { x: -4, z:  -4 }, { x: 4, z:  -4 },
+  { x: -4, z:   2 }, { x: 4, z:   2 }
+];
+
+for (const p of navePillars) {
+  set(p.x, 2, p.z, 'chiseled_quartz_block');
+  for (let y = 3; y <= 14; y++) {
+    set(p.x, y, p.z, 'quartz_pillar', { axis: 'y' });
+  }
+  set(p.x, 15, p.z, 'smooth_quartz_stairs', { facing: p.x < 0 ? 'east' : 'west', half: 'bottom' });
+  set(p.x, 16, p.z, 'quartz_bricks');
+}
+
+// Bóvedas de Crucería Nervadas en la nave (Y = 16 a 19)
+for (const pz of [-14, -9, -4, 2]) {
+  set(-3, 16, pz, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+  set( 3, 16, pz, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+  set(-2, 17, pz, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+  set( 2, 17, pz, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+  set(-1, 18, pz, 'smooth_quartz_slab', { half: 'top' });
+  set( 1, 18, pz, 'smooth_quartz_slab', { half: 'top' });
+  set( 0, 18, pz, 'chiseled_quartz_block'); // Clave de bóveda central
+}
+
+// Candelabros Góticos Colgantes con luz cálida cenital
+for (const cz of [-11, -4, 0]) {
+  set(0, 18, cz, 'chain');
+  set(0, 17, cz, 'chain');
+  set(0, 16, cz, 'ochre_froglight');
+  set(0, 15, cz, 'lantern', { hanging: true });
+}
+
+// Presbiterio y Altar Real al fondo de la nave (Z = -14 a -18)
+fillBox(-5, 2, -18, 5, 2, -15, 'chiseled_quartz_block');
+fillBox(-3, 3, -18, 3, 3, -16, 'smooth_quartz');
+set( 0, 4, -17, 'gold_block');
+set( 0, 5, -17, 'dark_oak_stairs', { facing: 'south', half: 'bottom' });
+set(-3, 4, -17, 'end_rod'); set(-3, 5, -17, 'lantern', { hanging: false });
+set( 3, 4, -17, 'end_rod'); set( 3, 5, -17, 'lantern', { hanging: false });
+
+// Muros Perimetrales Exteriores Blancos
+// Muro Lateral Izquierdo (X = -8, Z = -18 a 8) - FUSIONADO DIRECTAMENTE CON LA GRAN AGUJA
+fillBox(-8, 2, -18, -8, 22, 8, 'quartz_bricks');
+// Muro Lateral Derecho (X = 8, Z = -18 a 8) - FUSIONADO DIRECTAMENTE CON EL GRAN CAMPANARIO
+fillBox(8, 2, -18, 8, 22, 8, 'quartz_bricks');
+// Muro Posterior (Z = -18, X = -8 a 8, Y = 2 a 22)
+fillBox(-8, 2, -18, 8, 22, -18, 'quartz_bricks');
+
+// Tejado Mayor a Dos Aguas de Pizarra de la Nave (Y = 22 a 32, Z = -18 a 8)
+for (let z = -18; z <= 8; z++) {
+  for (let x = -8; x <= 8; x++) {
+    const h = 22 + Math.floor((8 - Math.abs(x)) * 1.2); // Cumbrera en Y = 31
+    for (let y = 22; y <= h; y++) {
+      set(x, y, z, (y === h) ? 'deepslate_bricks' : 'quartz_bricks');
+    }
+  }
+  set(0, 32, z, 'deepslate_bricks');
+}
+
+// ============================================================================
+// 3. FACHADA CENTRAL: PORTAL MAYOR, GABLETE Y PLANTA ALTA (Z = 8 a 15, X = -7 a 7)
+// ============================================================================
+// Muros macizos de cuarzo blanco en la planta baja: CERO VENTANAS AL LADO EN EL CENTRO
+for (let z = 8; z <= 12; z++) {
+  for (let x = -7; x <= 7; x++) {
+    for (let y = 1; y <= 13; y++) {
+      const isPortalTunnel = (Math.abs(x) <= 2 && z >= 9 && y <= 7);
+      if (!isPortalTunnel) {
+        set(x, y, z, 'quartz_bricks');
+      }
+    }
+  }
+}
+
+// Pilastras y contrafuertes verticales en la base que enmarcan el portal
+for (const px of [-6, -4, 4, 6]) {
+  for (let y = 1; y <= 13; y++) {
+    set(px, y, 12, 'quartz_pillar', { axis: 'y' });
+    if (y === 5 || y === 9 || y === 13) {
+      set(px, y, 13, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+    }
+  }
+}
+
+// Gran Portal Abocinado con Cuádruple Arquivolta Escalonada (Z = 9 a 14)
+for (let z = 9; z <= 14; z++) {
+  const w = (z >= 13) ? 4 : (z >= 11 ? 3 : 2);
+  for (let x = -w; x <= w; x++) {
+    if (Math.abs(x) === w) {
+      for (let y = 1; y <= 8; y++) {
+        set(x, y, z, (y === 1) ? 'chiseled_quartz_block' : 'quartz_pillar', { axis: 'y' });
+      }
+    }
+    // Bóveda ojival del portal
+    if (Math.abs(x) === 1) {
+      set(x, 8, z, 'smooth_quartz_stairs', { facing: x > 0 ? 'east' : 'west', half: 'bottom' });
+    } else if (x === 0) {
+      set(x, 8, z, 'smooth_quartz_slab', { half: 'top' });
+    }
+  }
+}
+
+// Gran Puerta de Roble Oscuro al fondo del portal con luz cálida (Z = 9)
+for (let x = -1; x <= 1; x++) {
+  for (let y = 1; y <= 6; y++) {
+    if (y <= 4) set(x, y, 9, 'dark_oak_planks');
+    else if (y === 5) set(x, y, 9, 'ochre_froglight');
+    else set(x, y, 9, 'smooth_quartz_stairs', { facing: x > 0 ? 'east' : 'west', half: 'top' });
+  }
+}
+
+// Gran Gablete Triangular sobre el Portal con Hornacina Iluminada (Z = 14, Y = 9 a 21)
+for (let y = 9; y <= 18; y++) {
+  const halfG = Math.max(0, 18 - y);
+  for (let x = -halfG; x <= halfG; x++) {
+    if (Math.abs(x) === halfG) {
+      // Rampa con arquillos y crockets
+      set(x, y, 14, 'smooth_quartz_stairs', { facing: x > 0 ? 'west' : 'east', half: 'bottom' });
+      set(x, y, 13, 'smooth_quartz');
+    } else if (x === 0 && (y >= 11 && y <= 16)) {
+      // Hornacina gótica central alargada con resplandor dorado
+      set(0, y, 13, 'ochre_froglight');
+      set(0, y, 14, 'iron_bars');
+    } else {
+      set(x, y, 13, 'quartz_bricks');
+    }
+  }
+}
+// Cruz en el vértice del gablete
+set(0, 19, 14, 'chiseled_quartz_block');
+set(0, 20, 14, 'iron_bars');
+set(-1, 20, 14, 'iron_bars');
+set( 1, 20, 14, 'iron_bars');
+set(0, 21, 14, 'end_rod');
+
+// Fachada Superior Central (Z = 8, X = -6 a 6, Y = 14 a 28)
+// Galería de arquerías ciegas en la base de la planta alta (Y = 14)
+for (let x = -6; x <= 6; x++) {
+  set(x, 14, 8, 'chiseled_quartz_block');
+}
+
+// 3 Grandes Ventanales Góticos Ojivales con tracería calada y luz dorada (Completos y articulados)
+// Ventanal Izquierdo (X = -4 y -3, Z = 8)
+set(-4, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+set(-3, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+for (let wy = 17; wy <= 22; wy++) {
+  set(-4, wy, 8, 'tinted_glass'); set(-3, wy, 8, 'tinted_glass');
+  set(-4, wy, 7, 'ochre_froglight'); set(-3, wy, 7, 'ochre_froglight');
+}
+set(-4, 23, 8, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+set(-3, 23, 8, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+set(-4, 24, 8, 'smooth_quartz_slab', { half: 'bottom' });
+set(-3, 24, 8, 'smooth_quartz_slab', { half: 'bottom' });
+
+// Ventanal Central Tríforo Mayor (X = -1, 0, 1, Z = 8)
+set(-1, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+set( 0, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+set( 1, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+for (let wy = 17; wy <= 23; wy++) {
+  set(-1, wy, 8, 'tinted_glass'); set(0, wy, 8, 'tinted_glass'); set(1, wy, 8, 'tinted_glass');
+  set(-1, wy, 7, 'ochre_froglight'); set(0, wy, 7, 'ochre_froglight'); set(1, wy, 7, 'ochre_froglight');
+}
+set( 0, 20, 8, 'iron_bars'); set(0, 21, 8, 'iron_bars'); set(0, 22, 8, 'iron_bars'); // Mainel de tracería
+set(-1, 24, 8, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+set( 0, 24, 8, 'smooth_quartz_slab', { half: 'top' });
+set( 1, 24, 8, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+
+// Ventanal Derecho (X = 3 y 4, Z = 8)
+set(3, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+set(4, 16, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+for (let wy = 17; wy <= 22; wy++) {
+  set(3, wy, 8, 'tinted_glass'); set(4, wy, 8, 'tinted_glass');
+  set(3, wy, 7, 'ochre_froglight'); set(4, wy, 7, 'ochre_froglight');
+}
+set(3, 23, 8, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+set(4, 23, 8, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+set(3, 24, 8, 'smooth_quartz_slab', { half: 'bottom' });
+set(4, 24, 8, 'smooth_quartz_slab', { half: 'bottom' });
+
+// Muros, impostas y matacanes superiores de la fachada central
+for (let x = -6; x <= 6; x++) {
+  const isWinX = (x >= -4 && x <= -3) || (x >= -1 && x <= 1) || (x >= 3 && x <= 4);
+  for (let y = 15; y <= 24; y++) {
+    if (!isWinX) set(x, y, 8, 'quartz_bricks');
+  }
+  // Ménsulas y matacanes salientes
+  set(x, 25, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  // Balustrada almenada
+  set(x, 26, 8, 'quartz_bricks');
+  if (Math.abs(x) % 2 === 0) {
+    set(x, 27, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+    set(x, 28, 8, 'iron_bars');
+  }
+}
+
+// Frontón triangular superior del remate de la fachada (Z = 8, Y = 28 a 38)
+for (let y = 28; y <= 35; y++) {
+  const step = y - 28;
+  const halfP = Math.max(0, 6 - step);
+  for (let x = -halfP; x <= halfP; x++) {
+    set(x, y, 8, (Math.abs(x) === halfP) ? 'smooth_quartz_stairs' : 'quartz_bricks',
+        { facing: x > 0 ? 'west' : 'east', half: 'bottom' });
+  }
+}
+// Cruz en la cumbre del frontón central
+set(0, 36, 8, 'chiseled_quartz_block');
+set(0, 37, 8, 'iron_bars');
+set(-1, 37, 8, 'iron_bars');
+set( 1, 37, 8, 'iron_bars');
+set(0, 38, 8, 'end_rod');
+
+// ============================================================================
+// 4. LA GRAN AGUJA IZQUIERDA (CATHEDRAL SPIRE - X = -14, Z = 3, Y = 1 a 76)
+// ============================================================================
+// FUSIONADA DIRECTAMENTE CON LA NAVE Y EL FLANCO IZQUIERDO (SIN ESPACIO DE AIRE)
+const spireX = -14, spireZ = 3;
+
+// Fuste octogonal robusto y monumental de cuarzo blanco (Y = 1 a 34)
+hollowCylinder(spireX, spireZ, 5.4, 2.4, 1, 34, 'quartz_bricks');
+for (const fy of [1, 9, 17, 25, 34]) {
+  fillCylinder(spireX, spireZ, 5.4, fy, fy, 'quartz_bricks');
+}
+
+// Contrafuertes angulares escalonados exteriores
+for (let y = 1; y <= 32; y++) {
+  set(spireX - 6, y, spireZ - 1, 'smooth_quartz');
+  set(spireX - 6, y, spireZ + 1, 'smooth_quartz');
+  set(spireX - 1, y, spireZ + 6, 'smooth_quartz');
+  set(spireX + 1, y, spireZ + 6, 'smooth_quartz');
+  if (y === 10 || y === 20 || y === 30) {
+    set(spireX - 6, y, spireZ, 'smooth_quartz_stairs', { facing: 'west', half: 'bottom' });
+    set(spireX, y, spireZ + 6, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  }
+}
+
+// Ventanales lanciformes superiores con tracería y luz cálida
+for (const wy of [16, 17, 24, 25]) {
+  set(spireX, wy, spireZ + 5, 'tinted_glass');
+  set(spireX, wy, spireZ + 4, 'ochre_froglight');
+  set(spireX - 5, wy, spireZ, 'tinted_glass');
+  set(spireX - 4, wy, spireZ, 'ochre_froglight');
+}
+
+// Gran Galería Abierta del Campanario (The Belfry Stage - Y = 35 a 45)
+fillBox(spireX - 5, 35, spireZ - 5, spireX + 5, 35, spireZ + 5, 'quartz_bricks');
+for (let y = 36; y <= 45; y++) {
+  for (let dx = -4; dx <= 4; dx++) {
+    for (let dz = -4; dz <= 4; dz++) {
+      const isCorner = (Math.abs(dx) >= 3 && Math.abs(dz) >= 3);
+      const isEdge = (Math.abs(dx) === 4 || Math.abs(dz) === 4);
+      if (isCorner) {
+        set(spireX + dx, y, spireZ + dz, 'quartz_bricks');
+      } else if (isEdge) {
+        set(spireX + dx, y, spireZ + dz, (y >= 38 && y <= 44) ? 'iron_bars' : 'quartz_bricks');
+      }
+    }
+  }
+  // Gran luz dorada del campanario
+  set(spireX, y, spireZ, 'ochre_froglight');
+}
+
+// Aro de matacanes salientes y 4 Grandes Pináculos de esquina (Y = 46 a 54)
+fillBox(spireX - 4, 46, spireZ - 4, spireX + 4, 46, spireZ + 4, 'quartz_bricks');
+ringStairs(spireX, spireZ, 4.8, 46, true);
+ring(spireX, spireZ, 4.8, 46, 'smooth_quartz_slab', { half: 'top' });
+
+for (const [px, pz] of [[-4, -4], [4, -4], [-4, 4], [4, 4]]) {
+  buildPinnacle(spireX + px, 47, spireZ + pz, 7);
+}
+
+// Linterna octogonal superior de cuarzo (Y = 47 a 56)
+for (let y = 47; y <= 56; y++) {
+  for (let dx = -3; dx <= 3; dx++) {
+    for (let dz = -3; dz <= 3; dz++) {
+      const dSq = dx * dx + dz * dz;
+      if (dSq <= 9.2 && dSq >= 3.5) {
+        const isWin = (y >= 49 && y <= 53) && (dx === 0 || dz === 0);
+        set(spireX + dx, y, spireZ + dz, isWin ? 'tinted_glass' : 'quartz_bricks');
+      }
+    }
+  }
+  set(spireX, y, spireZ, 'ochre_froglight');
+}
+fillBox(spireX - 3, 56, spireZ - 3, spireX + 3, 56, spireZ + 3, 'smooth_quartz');
+// Aro de cornisa de la linterna
+ringStairs(spireX, spireZ, 3.8, 56, false);
+
+// La Gran Aguja Gótica Maciza de Pizarra (Y = 57 a 72) - SOARING NEEDLE SPIRE
+fillCone(spireX, spireZ, 3.5, 57, 72, 'deepslate_bricks');
+
+// ============================================================================
+// AROS ALREDEDOR DEL TECHO DE LA AGUJA (SOLICITUD EXPLÍCITA DEL USUARIO)
+// ============================================================================
+// 1. Aro basal prominente alrededor del inicio de la aguja (Y = 57-58)
+ringStairs(spireX, spireZ, 4.0, 57, false);
+boldRing(spireX, spireZ, 4.0, 57);
+
+// 2. Gran Aro horizontal ornamental ceñido a un tercio de la aguja (Y = 63)
+boldRing(spireX, spireZ, 2.7, 63);
+
+// 3. Aro collarín ornamental superior ceñido a dos tercios de la aguja (Y = 68)
+boldRing(spireX, spireZ, 1.7, 68);
+
+// Remate en Cruz Celestial Latina Completa (Y = 73 a 76)
+set(spireX, 73, spireZ, 'deepslate_bricks');
+set(spireX, 74, spireZ, 'iron_bars');
+set(spireX, 75, spireZ, 'iron_bars');
+set(spireX - 1, 75, spireZ, 'iron_bars'); // Brazo oeste
+set(spireX + 1, 75, spireZ, 'iron_bars'); // Brazo este
+set(spireX, 76, spireZ, 'end_rod');        // Remate supremo a Y = 76
+
+// ============================================================================
+// 5. GRAN TORREÓN CAMPANARIO DERECHO (BELFRY KEEP - X = 8 a 20, Z = -4 a 8, Y = 1 a 57)
+// ============================================================================
+// FUSIONADO DIRECTAMENTE CON LA NAVE Y LA FACHADA (SIN ESPACIO DE AIRE)
+// CATEDRAL GÓTICA FORTIFICADA DE PLANTA CUADRADA CON CONTRAFUERTES Y DOBLE VENTANAL OJIVAL
+const kMinX = 8, kMaxX = 20, kMinZ = -4, kMaxZ = 8;
+
+// Fuste cuadrangular monumental macizo y hueco con muros de 2 bloques
+hollowBox(kMinX, 1, kMinZ, kMaxX, 32, kMaxZ, 2, 'quartz_bricks');
+for (const fy of [1, 10, 20, 32]) {
+  fillBox(kMinX + 2, fy, kMinZ + 2, kMaxX - 2, fy, kMaxZ - 2, 'quartz_bricks');
+}
+
+// Contrafuertes angulares escalonados en las esquinas exteriores
+for (let y = 1; y <= 31; y++) {
+  // Esquina Sureste (X = 20, Z = 8)
+  set(21, y, 7, 'smooth_quartz'); set(21, y, 8, 'smooth_quartz'); set(20, y, 9, 'smooth_quartz');
+  // Esquina Noreste (X = 20, Z = -4)
+  set(21, y, -3, 'smooth_quartz'); set(21, y, -4, 'smooth_quartz'); set(20, y, -5, 'smooth_quartz');
+  // Esquina Suroeste (X = 8, Z = 8)
+  set(8, y, 9, 'smooth_quartz'); set(7, y, 8, 'smooth_quartz');
+  
+  // Escalonamiento con repisas de descarga de cuarzo
+  if (y === 10 || y === 20 || y === 30) {
+    set(21, y, 8, 'smooth_quartz_stairs', { facing: 'east', half: 'bottom' });
+    set(20, y, 9, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+    set(21, y, -4, 'smooth_quartz_stairs', { facing: 'east', half: 'bottom' });
+    set(20, y, -5, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  }
+}
+
+// Doble Gran Ventanal Ojival Gótico en la cara frontal (Z = 8, Y = 18 a 28)
+for (const wx of [11, 16]) {
+  // Alféizar moldurado con caída hacia el exterior
+  set(wx, 17, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  set(wx + 1, 17, 8, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  for (let wy = 18; wy <= 26; wy++) {
+    set(wx, wy, 8, 'tinted_glass');
+    set(wx + 1, wy, 8, 'tinted_glass');
+    set(wx, wy, 7, 'ochre_froglight'); // Luz dorada interior
+    set(wx + 1, wy, 7, 'ochre_froglight');
+  }
+  // Arcos apuntados ojivales convergentes hacia el centro de cada vano
+  set(wx, 27, 8, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+  set(wx + 1, 27, 8, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+  set(wx, 28, 8, 'smooth_quartz_slab', { half: 'bottom' });
+  set(wx + 1, 28, 8, 'smooth_quartz_slab', { half: 'bottom' });
+}
+
+// Gran Cornisa de Matacanes Volados en la base del campanario (Y = 32 a 34)
+for (let x = kMinX - 1; x <= kMaxX + 1; x++) {
+  for (let z = kMinZ - 1; z <= kMaxZ + 1; z++) {
+    const isBorder = (x === kMinX - 1 || x === kMaxX + 1 || z === kMinZ - 1 || z === kMaxZ + 1);
+    if (isBorder) {
+      set(x, 32, z, 'smooth_quartz');
+      set(x, 33, z, 'smooth_quartz_stairs', { facing: 'south', half: 'top' });
+      set(x, 34, z, 'smooth_quartz_slab', { half: 'bottom' });
+    }
+  }
+}
+
+// Gran Galería Abierta del Campanario (The Open Belfry Stage - Y = 35 a 46)
+hollowBox(kMinX, 35, kMinZ, kMaxX, 46, kMaxZ, 2, 'quartz_bricks');
+
+// Grandes Arcos Geminados del Campanario en cada cara (idénticos a la imagen)
+// Cara Sur (Z = 8): Dos grandes vanos abiertos de 3 bloques de ancho
+for (const bwx of [10, 15]) {
+  for (let by = 37; by <= 44; by++) {
+    for (let dx = 0; dx <= 2; dx++) {
+      remove(bwx + dx, by, 8);
+      set(bwx + dx, by, 7, 'iron_bars'); // Campanas y rejería
+    }
+  }
+  // Arcos ojivales del belfry
+  set(bwx, 45, 8, 'smooth_quartz_stairs', { facing: 'west', half: 'bottom' });
+  set(bwx + 1, 45, 8, 'smooth_quartz');
+  set(bwx + 2, 45, 8, 'smooth_quartz_stairs', { facing: 'east', half: 'bottom' });
+}
+// Iluminación dorada del interior del campanario
+for (let by = 37; by <= 45; by++) {
+  set(14, by, 2, 'ochre_froglight');
+}
+
+// Gran Balustrada Almenada y Corona de 8 Pináculos Góticos (Y = 47 a 57)
+// Terraza superior del campanario
+fillBox(kMinX - 1, 47, kMinZ - 1, kMaxX + 1, 47, kMaxZ + 1, 'quartz_bricks');
+for (let x = kMinX - 1; x <= kMaxX + 1; x++) {
+  for (let z = kMinZ - 1; z <= kMaxZ + 1; z++) {
+    const isBorder = (x === kMinX - 1 || x === kMaxX + 1 || z === kMinZ - 1 || z === kMaxZ + 1);
+    if (isBorder && (Math.abs(x + z) % 2 === 0)) {
+      set(x, 48, z, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+    }
+  }
+}
+
+// Cubierta plana abuhardillada central en pizarra
+fillBox(kMinX + 3, 48, kMinZ + 3, kMaxX - 3, 48, kMaxZ - 3, 'deepslate_bricks');
+set(14, 49, 2, 'chiseled_quartz_block');
+set(14, 50, 2, 'end_rod');
+
+// Corona de 8 Grandes Pináculos Góticos que coronan el campanario (idéntica a la imagen)
+const belfryPinnacles = [
+  // 4 Esquinas colosales de 9 bloques de altura
+  { x: kMinX - 1, z: kMinZ - 1, h: 9 },
+  { x: kMaxX + 1, z: kMinZ - 1, h: 9 },
+  { x: kMinX - 1, z: kMaxZ + 1, h: 9 },
+  { x: kMaxX + 1, z: kMaxZ + 1, h: 9 },
+  // 4 Centros de fachada de 7 bloques de altura
+  { x: 14,        z: kMinZ - 1, h: 7 },
+  { x: 14,        z: kMaxZ + 1, h: 7 },
+  { x: kMinX - 1, z: 2,         h: 7 },
+  { x: kMaxX + 1, z: 2,         h: 7 }
+];
+
+for (const p of belfryPinnacles) {
+  buildPinnacle(p.x, 48, p.z, p.h);
+}
+
+// ============================================================================
+// 6. TORREONES EMBEBIDOS Y TORRECILLAS VOLADAS CON AROS EN SUS TECHOS
+// ============================================================================
+// TORREÓN ORIEL FRONTAL-IZQUIERDO (X = -10, Z = 9, Y = 1 a 43)
+// Idéntico al torreón circular con mirador iluminado que sobresale en la imagen
+hollowCylinder(-10, 9, 3.2, 1.2, 1, 26, 'quartz_bricks');
+fillCylinder(-10, 9, 3.2, 1, 1, 'quartz_bricks');
+fillCylinder(-10, 9, 3.2, 16, 16, 'quartz_bricks');
+fillCylinder(-10, 9, 3.2, 26, 26, 'quartz_bricks');
+// Unión maciza de cuarzo con la nave y la gran aguja
+fillBox(-10, 1, 4, -8, 28, 9, 'quartz_bricks');
+
+// Mirador / oriel con ventanales arqueados y luz dorada (Y = 18 a 25)
+for (let wy = 18; wy <= 24; wy++) {
+  set(-10, wy, 12, 'tinted_glass');
+  set(-10, wy, 11, 'ochre_froglight');
+  set(-8, wy, 11, 'tinted_glass');
+  set(-9, wy, 10, 'ochre_froglight');
+}
+
+// Cornisa de ménsulas voladas y adarve del mirador (Y = 27 a 28)
+ringStairs(-10, 9, 3.4, 27, true);
+ring(-10, 9, 3.4, 28, 'smooth_quartz_slab', { half: 'bottom' });
+
+// Tejado cónico de pizarra del oriel (Y = 29 a 42)
+fillCone(-10, 9, 3.1, 29, 41, 'deepslate_bricks');
+
+// Aros alrededor del techo del torreón oriel
+ringStairs(-10, 9, 3.6, 29, false);
+boldRing(-10, 9, 3.6, 29);
+// Aro horizontal ornamental ceñido a media altura del cono
+boldRing(-10, 9, 2.2, 35);
+
+set(-10, 42, 9, 'iron_bars');
+set(-10, 43, 9, 'end_rod');
+
+// Unión maciza de cuarzo entre el portal y el gran campanario derecho
+fillBox(7, 1, 7, 8, 32, 8, 'quartz_bricks');
+
+// ============================================================================
+// 6. ALA Y AGUJAS DEL FLANCO IZQUIERDO (CÍRCULO AZUL 1 - X = -18 a -36)
+// ============================================================================
+// A) CUERPO DEL ALA CATEDRALICIA IZQUIERDA (X = -18 a -36, Z = -4 a 8, Y = 1 a 32)
+// Muros perimetrales y cimientos macizos de cuarzo
+fillBox(-36, 1, -4, -18, 1, 8, 'quartz_bricks');
+fillBox(-36, 1, -4, -36, 28, 8, 'quartz_bricks'); // Muro testero oeste
+fillBox(-36, 1, -4, -18, 28, -4, 'quartz_bricks'); // Muro norte posterior
+fillBox(-36, 1, 6, -18, 16, 7, 'quartz_bricks');  // Muro sur planta baja macizo
+
+// Unión maciza de cuarzo con la Gran Aguja Izquierda
+fillBox(-19, 1, -4, -18, 28, 8, 'quartz_bricks');
+
+// Forjados interiores
+fillBox(-35, 16, -3, -19, 16, 7, 'quartz_bricks');
+fillBox(-35, 28, -3, -19, 28, 7, 'quartz_bricks');
+
+// Contrafuertes escalonados del ala izquierda (Z = 7 a 8)
+const leftButtressX = [-20, -25, -30, -35];
+for (const bx of leftButtressX) {
+  fillBox(bx - 1, 1, 7, bx + 1, 12, 8, 'quartz_bricks');
+  set(bx - 1, 13, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  set(bx,     13, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  set(bx + 1, 13, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  fillBox(bx, 14, 7, bx, 22, 8, 'quartz_bricks');
+  set(bx, 23, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  set(bx, 24, 7, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+}
+
+// Planta Noble: 3 Grandes Ventanales Ojivales hacia el Sur (Z = 6, Y = 17 a 26)
+const leftWindowsX = [-22, -27, -32];
+for (const wx of leftWindowsX) {
+  // Antepecho moldurado
+  set(wx - 1, 17, 6, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  set(wx,     17, 6, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  // Jambas de pilares
+  for (let wy = 18; wy <= 24; wy++) {
+    set(wx - 1, wy, 6, 'quartz_pillar', { axis: 'y' });
+    set(wx,     wy, 6, 'tinted_glass');
+    set(wx,     wy, 5, 'ochre_froglight'); // Luz dorada interior
+  }
+  // Arco apuntado superior
+  set(wx - 1, 25, 6, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+  set(wx,     25, 6, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+  set(wx - 1, 26, 6, 'smooth_quartz_slab', { half: 'bottom' });
+  set(wx,     26, 6, 'smooth_quartz_slab', { half: 'bottom' });
+}
+
+// Cornisa de ménsulas voladas y adarve almenado del ala izquierda (Y = 28 a 30)
+for (let x = -36; x <= -18; x++) {
+  set(x, 28, 7, 'smooth_quartz_stairs', { facing: 'south', half: 'top' });
+  set(x, 29, 7, 'smooth_quartz_slab', { half: 'bottom' });
+  if (Math.abs(x) % 2 === 0) {
+    set(x, 30, 7, 'smooth_quartz');
+  }
+}
+
+// Tejado de pizarra a dos aguas del ala izquierda (Y = 29 a 35)
+for (let ty = 29; ty <= 34; ty++) {
+  const zOffset = ty - 29;
+  for (let x = -35; x <= -19; x++) {
+    set(x, ty, 6 - zOffset, 'deepslate_bricks');
+    set(x, ty, -3 + zOffset, 'deepslate_bricks');
+  }
+}
+fillBox(-35, 35, 1, -19, 35, 2, 'deepslate_bricks'); // Cumbrera
+
+// B) TORREÓN Y AGUJA INTERMEDIA IZQUIERDA (X = -23, Z = 5, Y = 1 a 58)
+// Nace firmemente desde Y = 1
+hollowCylinder(-23, 5, 3.6, 1.4, 1, 27, 'quartz_bricks');
+fillCylinder(-23, 5, 3.6, 1, 1, 'quartz_bricks');
+fillCylinder(-23, 5, 3.6, 16, 16, 'quartz_bricks');
+fillCylinder(-23, 5, 3.6, 27, 27, 'quartz_bricks');
+
+// Belvedere / Galería de arquillos iluminada (Y = 28 a 33)
+for (let y = 28; y <= 33; y++) {
+  for (let dx = -3; dx <= 3; dx++) {
+    for (let dz = -3; dz <= 3; dz++) {
+      const dSq = dx * dx + dz * dz;
+      if (dSq >= 6 && dSq <= 12) {
+        if (y === 28 || y === 33) {
+          set(-23 + dx, y, 5 + dz, 'smooth_quartz');
+        } else if (Math.abs(dx * dz) <= 2) {
+          set(-23 + dx, y, 5 + dz, 'tinted_glass');
+        } else {
+          set(-23 + dx, y, 5 + dz, 'quartz_pillar', { axis: 'y' });
+        }
+      }
+    }
+  }
+  set(-23, y, 5, 'ochre_froglight');
+}
+
+// Cornisa volada y balustrada con pináculos (Y = 34 a 35)
+ringStairs(-23, 5, 3.8, 34, true);
+ring(-23, 5, 3.8, 35, 'smooth_quartz_slab', { half: 'top' });
+buildPinnacle(-27, 35, 5, 6);
+buildPinnacle(-19, 35, 5, 6);
+buildPinnacle(-23, 35, 1, 6);
+buildPinnacle(-23, 35, 9, 6);
+
+// Aguja cónica de pizarra (Y = 36 a 54)
+fillCone(-23, 5, 3.6, 36, 54, 'deepslate_bricks');
+
+// Aros horizontales prominentes en el techo cónico
+boldRing(-23, 5, 4.0, 36);
+boldRing(-23, 5, 2.7, 44);
+boldRing(-23, 5, 1.6, 50);
+
+// Remate y vara celestial de la aguja intermedia izquierda
+set(-23, 55, 5, 'quartz_pillar', { axis: 'y' });
+set(-23, 56, 5, 'iron_bars');
+set(-23, 57, 5, 'iron_bars');
+set(-23, 58, 5, 'end_rod');
+
+// C) TORRETA LANCIFORME DE EXTREMO IZQUIERDO (X = -33, Z = 3, Y = 1 a 50)
+// Emerge de la niebla en el extremo exterior del ala
+hollowCylinder(-33, 3, 2.4, 0.8, 1, 30, 'quartz_bricks');
+fillCylinder(-33, 3, 2.4, 1, 1, 'quartz_bricks');
+fillCylinder(-33, 3, 2.4, 16, 16, 'quartz_bricks');
+fillCylinder(-33, 3, 2.4, 30, 30, 'quartz_bricks');
+
+// Ventanucos lanciformes con luz dorada
+for (let wy = 18; wy <= 24; wy++) {
+  set(-33, wy, 5, 'tinted_glass');
+  set(-33, wy, 4, 'ochre_froglight');
+}
+
+// Capitel moldurado (Y = 31)
+ringStairs(-33, 3, 2.6, 31, true);
+ring(-33, 3, 2.6, 31, 'smooth_quartz_slab', { half: 'top' });
+
+// Aguja afilada de pizarra (Y = 32 a 46)
+fillCone(-33, 3, 2.5, 32, 46, 'deepslate_bricks');
+
+// Aros prominentes en la torreta lanciforme izquierda
+boldRing(-33, 3, 2.9, 32);
+boldRing(-33, 3, 1.7, 40);
+
+// Remate de la torreta izquierda
+set(-33, 47, 3, 'smooth_quartz');
+set(-33, 48, 3, 'iron_bars');
+set(-33, 49, 3, 'iron_bars');
+set(-33, 50, 3, 'end_rod');
+
+// ============================================================================
+// 7. ALA Y AGUJAS DEL FLANCO DERECHO (CÍRCULO AZUL 2 - X = 18 a 36)
+// ============================================================================
+// A) CUERPO DEL PALACIO GÓTICO DERECHO (X = 18 a 36, Z = -4 a 8, Y = 1 a 32)
+// Muros perimetrales y cimientos macizos de cuarzo
+fillBox(18, 1, -4, 36, 1, 8, 'quartz_bricks');
+fillBox(36, 1, -4, 36, 28, 8, 'quartz_bricks'); // Muro testero este
+fillBox(18, 1, -4, 36, 28, -4, 'quartz_bricks'); // Muro norte posterior
+fillBox(18, 1, 6, 36, 16, 7, 'quartz_bricks');  // Muro sur planta baja macizo
+
+// Fusión maciza con el Gran Campanario Derecho (X = 18 a 20)
+fillBox(18, 1, -4, 20, 32, 8, 'quartz_bricks');
+
+// Forjados interiores
+fillBox(19, 16, -3, 35, 16, 7, 'quartz_bricks');
+fillBox(19, 28, -3, 35, 28, 7, 'quartz_bricks');
+
+// Contrafuertes escalonados del ala derecha (Z = 7 a 8)
+const rightButtressX = [22, 27, 32, 36];
+for (const bx of rightButtressX) {
+  fillBox(bx - 1, 1, 7, bx + 1, 12, 8, 'quartz_bricks');
+  set(bx - 1, 13, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  set(bx,     13, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  set(bx + 1, 13, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  fillBox(bx, 14, 7, bx, 22, 8, 'quartz_bricks');
+  set(bx, 23, 8, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+  set(bx, 24, 7, 'smooth_quartz_stairs', { facing: 'north', half: 'bottom' });
+}
+
+// Planta Noble: 3 Grandes Ventanales Ojivales hacia el Sur (Z = 6, Y = 17 a 26)
+const rightWindowsX = [23, 28, 33];
+for (const wx of rightWindowsX) {
+  // Antepecho moldurado
+  set(wx - 1, 17, 6, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  set(wx,     17, 6, 'smooth_quartz_stairs', { facing: 'south', half: 'bottom' });
+  // Jambas de pilares
+  for (let wy = 18; wy <= 24; wy++) {
+    set(wx - 1, wy, 6, 'quartz_pillar', { axis: 'y' });
+    set(wx,     wy, 6, 'tinted_glass');
+    set(wx,     wy, 5, 'ochre_froglight'); // Luz dorada interior
+  }
+  // Arco apuntado superior
+  set(wx - 1, 25, 6, 'smooth_quartz_stairs', { facing: 'east', half: 'top' });
+  set(wx,     25, 6, 'smooth_quartz_stairs', { facing: 'west', half: 'top' });
+  set(wx - 1, 26, 6, 'smooth_quartz_slab', { half: 'bottom' });
+  set(wx,     26, 6, 'smooth_quartz_slab', { half: 'bottom' });
+}
+
+// Cornisa de ménsulas voladas y adarve almenado del ala derecha (Y = 28 a 30)
+for (let x = 18; x <= 36; x++) {
+  set(x, 28, 7, 'smooth_quartz_stairs', { facing: 'south', half: 'top' });
+  set(x, 29, 7, 'smooth_quartz_slab', { half: 'bottom' });
+  if (x % 2 === 0) {
+    set(x, 30, 7, 'smooth_quartz');
+  }
+}
+
+// Tejado de pizarra a dos aguas del ala derecha (Y = 29 a 35)
+for (let ty = 29; ty <= 34; ty++) {
+  const zOffset = ty - 29;
+  for (let x = 19; x <= 35; x++) {
+    set(x, ty, 6 - zOffset, 'deepslate_bricks');
+    set(x, ty, -3 + zOffset, 'deepslate_bricks');
+  }
+}
+fillBox(19, 35, 1, 35, 35, 2, 'deepslate_bricks'); // Cumbrera
+
+// B) TORREÓN Y AGUJA INTERMEDIA DERECHA (X = 24, Z = 5, Y = 1 a 60)
+// Nace firmemente desde Y = 1
+hollowCylinder(24, 5, 3.6, 1.4, 1, 29, 'quartz_bricks');
+fillCylinder(24, 5, 3.6, 1, 1, 'quartz_bricks');
+fillCylinder(24, 5, 3.6, 16, 16, 'quartz_bricks');
+fillCylinder(24, 5, 3.6, 29, 29, 'quartz_bricks');
+
+// Galería alta iluminada (Y = 30 a 35)
+for (let y = 30; y <= 35; y++) {
+  for (let dx = -3; dx <= 3; dx++) {
+    for (let dz = -3; dz <= 3; dz++) {
+      const dSq = dx * dx + dz * dz;
+      if (dSq >= 6 && dSq <= 12) {
+        if (y === 30 || y === 35) {
+          set(24 + dx, y, 5 + dz, 'smooth_quartz');
+        } else if (Math.abs(dx * dz) <= 2) {
+          set(24 + dx, y, 5 + dz, 'tinted_glass');
+        } else {
+          set(24 + dx, y, 5 + dz, 'quartz_pillar', { axis: 'y' });
+        }
+      }
+    }
+  }
+  set(24, y, 5, 'ochre_froglight');
+}
+
+// Cornisa volada y balustrada con pináculos (Y = 36 a 37)
+ringStairs(24, 5, 3.8, 36, true);
+ring(24, 5, 3.8, 37, 'smooth_quartz_slab', { half: 'top' });
+buildPinnacle(20, 37, 5, 6);
+buildPinnacle(28, 37, 5, 6);
+buildPinnacle(24, 37, 1, 6);
+buildPinnacle(24, 37, 9, 6);
+
+// Aguja cónica de pizarra (Y = 38 a 56)
+fillCone(24, 5, 3.6, 38, 56, 'deepslate_bricks');
+
+// Aros horizontales prominentes en el techo cónico
+boldRing(24, 5, 4.0, 38);
+boldRing(24, 5, 2.7, 46);
+boldRing(24, 5, 1.6, 52);
+
+// Remate y vara celestial de la aguja intermedia derecha
+set(24, 57, 5, 'quartz_pillar', { axis: 'y' });
+set(24, 58, 5, 'iron_bars');
+set(24, 59, 5, 'iron_bars');
+set(24, 60, 5, 'end_rod');
+
+// C) TORRETA LANCIFORME DE EXTREMO DERECHO CON CRUZ (X = 34, Z = 3, Y = 1 a 53)
+// Emerge majestuosa con la gran cruz en la cumbre este
+hollowCylinder(34, 3, 2.4, 0.8, 1, 32, 'quartz_bricks');
+fillCylinder(34, 3, 2.4, 1, 1, 'quartz_bricks');
+fillCylinder(34, 3, 2.4, 16, 16, 'quartz_bricks');
+fillCylinder(34, 3, 2.4, 32, 32, 'quartz_bricks');
+
+// Ventanucos lanciformes con luz dorada
+for (let wy = 18; wy <= 26; wy++) {
+  set(34, wy, 5, 'tinted_glass');
+  set(34, wy, 4, 'ochre_froglight');
+}
+
+// Capitel moldurado (Y = 33)
+ringStairs(34, 3, 2.6, 33, true);
+ring(34, 3, 2.6, 33, 'smooth_quartz_slab', { half: 'top' });
+
+// Aguja afilada de pizarra (Y = 34 a 48)
+fillCone(34, 3, 2.5, 34, 48, 'deepslate_bricks');
+
+// Aros prominentes en la torreta lanciforme derecha
+boldRing(34, 3, 2.9, 34);
+boldRing(34, 3, 1.7, 42);
+
+// Cruz Latina Monumental de remate (Y = 49 a 53)
+set(34, 49, 3, 'smooth_quartz');
+set(34, 50, 3, 'smooth_quartz');
+set(34, 51, 3, 'smooth_quartz');
+set(33, 51, 3, 'smooth_quartz_slab', { half: 'top' }); // Brazo oeste
+set(35, 51, 3, 'smooth_quartz_slab', { half: 'top' }); // Brazo este
+set(34, 52, 3, 'smooth_quartz');
+set(34, 53, 3, 'end_rod');
+
+// ============================================================================
+// 7. AGUJA DEL CRUCERO (FLÈCHE - X = 0, Z = -5, Y = 32 a 52)
+// ============================================================================
+// Aguja central que nace firmemente de la cumbrera del tejado mayor
+fillBox(-2, 32, -7, 2, 32, -3, 'quartz_bricks');
+for (let y = 33; y <= 42; y++) {
+  set(-1, y, -6, 'quartz_bricks'); set(1, y, -6, 'quartz_bricks');
+  set(-1, y, -4, 'quartz_bricks'); set(1, y, -4, 'quartz_bricks');
+  set( 0, y, -6, 'iron_bars'); set(0, y, -4, 'iron_bars');
+  set(-1, y, -5, 'iron_bars'); set(1, y, -5, 'iron_bars');
+  set( 0, y, -5, 'ochre_froglight');
+}
+fillCone(0, -5, 2.2, 43, 50, 'deepslate_bricks');
+// Aro ornamental en la aguja del crucero
+boldRing(0, -5, 1.5, 47);
+set(0, 51, -5, 'iron_bars');
+set(0, 52, -5, 'end_rod');
+
+console.log('[main.block] Colosal Castillo Gótico Blanco Crepuscular 3D generado con éxito.');
+
+
+

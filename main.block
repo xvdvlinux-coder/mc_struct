@@ -1,0 +1,377 @@
+// ============================================================================
+// MAIN.BLOCK - ESTADIO MUNDIALISTA CIRCULAR CERRADO FIFA & ARENA PVP 3D
+// ============================================================================
+// Inspirado en los estadios circulares icónicos de la Copa del Mundo FIFA
+// (como el Estadio Al Thumama y Lusail de Qatar 2022):
+//
+// 1. FACHADA CILÍNDRICA CIRCULAR 3D (ENVELOPE CONTINUO CERRADO):
+//    - Tambor exterior perfectamente circular (Radio = 32 bloques, Altura = 16).
+//    - Trazado geométrico trenzado en rombos (patrón Gahfiya / celosía mundialista)
+//      combinando cuarzo liso, ladrillos de pizarra, piedra cincelada y ranuras de luz.
+//    - 4 Portales monumentales de acceso en los puntos cardinales con escalinatas.
+//
+// 2. ENORME CUBIERTA DOMO CIRCULAR CON ÓCULO CENTRAL (THE ROOF OCULUS):
+//    - Techo continuo circular que cubre el 80% del estadio con patrón diagrid.
+//    - Gran apertura cenital circular (Óculo Central, Radio = 13 bloques) que permite
+//      ver el foso de combate desde el cielo, exactamente como la foto aérea de FIFA.
+//    - Corona circular continua de focos LED cenitales de alta potencia en el borde
+//      interior del óculo, bañando la arena de luz sin sombras.
+//
+// 3. EL CUENCO INTERIOR (CIRCULAR STADIUM BOWL 360°):
+//    - Graderías radiales continuas en 360 grados organizadas en terrazas circulares.
+//    - Mosaico de asientos de espectadores con butacas en colores de selecciones.
+//    - 8 Escaleras radiales de acceso (vomitorios) distribuidas cada 45 grados.
+//    - Anillo superior continuo de Palcos VIP panorámicos acristalados (Y = 10 a 13).
+//
+// 4. FOSO DE COMBATE PVP EN EL CENTRO DEL ÓCULO (ALTA TECNOLOGÍA):
+//    - Suelo de combate cibernético con anillos concéntricos de energía emisiva.
+//    - Plataforma central elevada de duelo (Ring de Campeones) con baliza cuántica.
+//    - 4 Torres tácticas de combate en los cuadrantes con plataformas de salto y francotirador.
+//    - Bases de Spawn de Equipos Azul (Norte) y Rojo (Sur) con portales de energía.
+//    - Coberturas blindadas, cajas de suministros y marcador Jumbotron 360° suspendido.
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 1. PLAZA CIRCULAR PERIMETRAL EXTERIOR (Y = 0, R = 32 a 36)
+// ----------------------------------------------------------------------------
+for (let z = -36; z <= 36; z++) {
+  for (let x = -36; x <= 36; x++) {
+    const r = Math.sqrt(x * x + z * z);
+    if (r >= 32.5 && r <= 36.5) {
+      const isRadialSpoke = (Math.abs(x) <= 2 || Math.abs(z) <= 2 || Math.abs(Math.abs(x) - Math.abs(z)) <= 1);
+      if (isRadialSpoke) {
+        world.setBlock(Vec3(x, 0, z), Block('polished_blackstone'));
+      } else {
+        world.setBlock(Vec3(x, 0, z), Block('stone_bricks'));
+      }
+    }
+  }
+}
+
+// Balizas de iluminación de la explanada exterior (postes de luz radiales)
+const outerPoles = [
+  { x: 0, z: -35 }, { x: 0, z: 35 }, { x: -35, z: 0 }, { x: 35, z: 0 },
+  { x: -25, z: -25 }, { x: 25, z: -25 }, { x: -25, z: 25 }, { x: 25, z: 25 }
+];
+for (const p of outerPoles) {
+  world.setBlock(Vec3(p.x, 1, p.z), Block('deepslate_bricks'));
+  world.setBlock(Vec3(p.x, 2, p.z), Block('iron_bars'));
+  world.setBlock(Vec3(p.x, 3, p.z), Block('sea_lantern'));
+}
+
+// ----------------------------------------------------------------------------
+// 2. FACHADA CILÍNDRICA CIRCULAR 3D CERRADA (R = 30 a 32, Y = 1 a 16)
+// ----------------------------------------------------------------------------
+// Tambor monumental completamente cerrado con textura geométrica trenzada
+for (let z = -33; z <= 33; z++) {
+  for (let x = -33; x <= 33; x++) {
+    const r = Math.sqrt(x * x + z * z);
+    
+    // Anillo de la pared exterior (espesor de 2 a 3 bloques)
+    if (r >= 30.0 && r <= 32.5) {
+      const angle = Math.atan2(z, x); // Ángulo polar para el patrón trenzado
+      const angleSector = Math.floor(((angle + Math.PI) / (2 * Math.PI)) * 32);
+      
+      // Portales monumentales de entrada en los 4 ejes principales
+      const isNorthPortal = (Math.abs(x) <= 2 && z <= -30);
+      const isSouthPortal = (Math.abs(x) <= 2 && z >= 30);
+      const isWestPortal  = (Math.abs(z) <= 2 && x <= -30);
+      const isEastPortal  = (Math.abs(z) <= 2 && x >= 30);
+      const isMainGate = (isNorthPortal || isSouthPortal || isWestPortal || isEastPortal);
+
+      for (let y = 1; y <= 16; y++) {
+        if (isMainGate) {
+          // Arco de entrada del portal
+          if (y <= 4) {
+            // Paso libre en planta baja
+            if (r <= 31.0 && (Math.abs(x) <= 1 || Math.abs(z) <= 1)) continue;
+            world.setBlock(Vec3(x, y, z), Block('smooth_quartz'));
+          } else if (y === 5) {
+            world.setBlock(Vec3(x, y, z), Block('sea_lantern'));
+          } else if (y === 6) {
+            world.setBlock(Vec3(x, y, z), Block('gold_block'));
+          } else {
+            world.setBlock(Vec3(x, y, z), Block('smooth_quartz'));
+          }
+        } else {
+          // Patrón geométrico romboidal trenzado (Al Thumama / Lusail)
+          const diagrid = (angleSector + Math.floor(y / 2)) % 2 === 0;
+          const isPillar = (angleSector % 4 === 0);
+          const isLightSlit = (y >= 6 && y <= 12 && angleSector % 4 === 2 && r >= 31.0);
+
+          if (isPillar) {
+            world.setBlock(Vec3(x, y, z), Block('deepslate_bricks'));
+          } else if (isLightSlit) {
+            world.setBlock(Vec3(x, y, z), Block('sea_lantern'));
+          } else if (diagrid) {
+            world.setBlock(Vec3(x, y, z), Block(r >= 31.5 ? 'smooth_quartz' : 'chiseled_stone_bricks'));
+          } else {
+            world.setBlock(Vec3(x, y, z), Block('polished_deepslate'));
+          }
+        }
+      }
+
+      // Coronamiento de la fachada en la cumbre
+      world.setBlock(Vec3(x, 17, z), Block('smooth_quartz_slab', { half: 'bottom' }));
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 3. GRAN CUBIERTA DOMO CIRCULAR CON ÓCULO CENTRAL (R = 13 a 31, Y = 16 a 18)
+// ----------------------------------------------------------------------------
+// Techo continuo cerrado que cubre las gradas dejando el óculo en el centro
+for (let z = -32; z <= 32; z++) {
+  for (let x = -32; x <= 32; x++) {
+    const r = Math.sqrt(x * x + z * z);
+
+    // Zona de cubierta: entre el borde exterior (R=31) y el óculo central (R=13)
+    if (r >= 13.0 && r <= 31.0) {
+      const angle = Math.atan2(z, x);
+      const sector = Math.floor(((angle + Math.PI) / (2 * Math.PI)) * 24);
+      
+      // Inclinación suave de la cúpula (más alta en el exterior, vuela hacia el óculo)
+      const roofY = (r >= 26) ? 17 : ((r >= 19) ? 18 : 17);
+
+      // Trazado de rombos/celosía del techo (como en la fotografía aérea)
+      const isRing = (Math.round(r) % 3 === 0);
+      const isSpoke = (sector % 2 === 0);
+      const isDiamondPattern = ((Math.round(r) + sector) % 2 === 0);
+
+      if (isRing && isSpoke) {
+        // Nervaduras estructurales de acero
+        world.setBlock(Vec3(x, roofY, z), Block('iron_block'));
+        world.setBlock(Vec3(x, roofY - 1, z), Block('deepslate_bricks'));
+      } else if (isDiamondPattern) {
+        world.setBlock(Vec3(x, roofY, z), Block('smooth_quartz_slab', { half: 'top' }));
+      } else {
+        world.setBlock(Vec3(x, roofY, z), Block('polished_deepslate'));
+      }
+    }
+
+    // CORONA CIRCULAR DE FOCOS CENITALES LED EN EL BORDE DEL ÓCULO (R = 12.5 a 13.5)
+    // Es el anillo brillante que baña la arena desde el techo en la foto
+    if (r >= 12.0 && r <= 13.5) {
+      world.setBlock(Vec3(x, 16, z), Block('iron_block'));
+      world.setBlock(Vec3(x, 15, z), Block('sea_lantern'));
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 4. EL CUENCO DEL ESTADIO (GRADERÍAS RADIALES CIRCULARES 360°)
+// ----------------------------------------------------------------------------
+// Gradas continuas en terrazas concéntricas (R = 14 a 30)
+for (let z = -30; z <= 30; z++) {
+  for (let x = -30; x <= 30; x++) {
+    const r = Math.sqrt(x * x + z * z);
+
+    // Solo dentro del anillo de graderías
+    if (r >= 14.0 && r <= 29.5) {
+      // Cimientos sólidos bajo las gradas
+      world.setBlock(Vec3(x, 0, z), Block('stone_bricks'));
+
+      const angle = Math.atan2(z, x);
+      // 8 Escaleras radiales (vomitorios) cada 45 grados para acceso
+      const isAisle = (
+        Math.abs(x) === 0 || Math.abs(z) === 0 ||
+        Math.abs(Math.abs(x) - Math.abs(z)) <= 1
+      );
+
+      // Niveles concéntricos de gradas:
+      // Terraza 1: R = 14 a 16 -> Y = 1 a 2
+      // Terraza 2: R = 17 a 19 -> Y = 3 a 4
+      // Terraza 3: R = 20 a 22 -> Y = 5 a 6
+      // Terraza 4: R = 23 a 25 -> Y = 7 a 8
+      // Terraza 5 (Palcos VIP): R = 26 a 29 -> Y = 9 a 12
+      let tierLevel = 0;
+      let stepY = 1;
+
+      if (r >= 14.0 && r < 17.0) {
+        tierLevel = 1; stepY = 2;
+      } else if (r >= 17.0 && r < 20.0) {
+        tierLevel = 2; stepY = 4;
+      } else if (r >= 20.0 && r < 23.0) {
+        tierLevel = 3; stepY = 6;
+      } else if (r >= 23.0 && r < 26.0) {
+        tierLevel = 4; stepY = 8;
+      } else {
+        tierLevel = 5; stepY = 10;
+      }
+
+      // Relleno vertical del escalón
+      for (let y = 1; y < stepY; y++) {
+        world.setBlock(Vec3(x, y, z), Block('deepslate_bricks'));
+      }
+
+      // Pasillo de la terraza
+      world.setBlock(Vec3(x, stepY, z), Block('smooth_stone_slab', { half: 'bottom' }));
+
+      // Butacas de espectadores en el escalón (si no es pasillo radial)
+      if (isAisle) {
+        world.setBlock(Vec3(x, stepY, z), Block('smooth_quartz_stairs', { facing: 'north', half: 'bottom' }));
+      } else if (tierLevel <= 4) {
+        // Mosaico de afición en la grada
+        let seatColor = 'gray_concrete';
+        if (z < -8) seatColor = 'blue_concrete';   // Fondo Norte (Equipo Azul)
+        else if (z > 8) seatColor = 'red_concrete'; // Fondo Sur (Equipo Rojo)
+        else if (Math.abs(x) % 2 === 0) seatColor = 'yellow_concrete'; // Tribunas laterales
+
+        world.setBlock(Vec3(x, stepY + 1, z), Block(seatColor));
+      } else if (tierLevel === 5) {
+        // Anillo de Palcos VIP acristalados
+        world.setBlock(Vec3(x, 10, z), Block('polished_deepslate'));
+        world.setBlock(Vec3(x, 11, z), Block('tinted_glass'));
+        world.setBlock(Vec3(x, 12, z), Block('tinted_glass'));
+        world.setBlock(Vec3(x, 13, z), Block('smooth_quartz_slab', { half: 'top' }));
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 5. FOSO DE COMBATE PVP EN EL CENTRO DEL ÓCULO (R <= 13, Y = 0 a 5)
+// ----------------------------------------------------------------------------
+// Suelo táctico cibernético visible directamente desde el óculo
+for (let z = -13; z <= 13; z++) {
+  for (let x = -13; x <= 13; x++) {
+    const distCenter = Math.sqrt(x * x + z * z);
+    if (distCenter <= 13.5) {
+      // Diseño de circuitos emisivos y batalla
+      if (distCenter <= 3.5) {
+        // Ring de Duelo Central
+        world.setBlock(Vec3(x, 0, z), Block('gold_block'));
+      } else if (distCenter >= 6.5 && distCenter <= 7.5) {
+        // Anillo interior de energía brillante
+        world.setBlock(Vec3(x, 0, z), Block('sea_lantern'));
+      } else if (distCenter >= 11.5 && distCenter <= 12.5) {
+        // Anillo exterior de foso
+        world.setBlock(Vec3(x, 0, z), Block('sea_lantern'));
+      } else if ((Math.abs(x) + Math.abs(z)) % 3 === 0) {
+        world.setBlock(Vec3(x, 0, z), Block('polished_blackstone'));
+      } else {
+        world.setBlock(Vec3(x, 0, z), Block('polished_deepslate'));
+      }
+    }
+  }
+}
+
+// Plataforma Elevada de Duelo Central (Ring de Campeones)
+for (let x = -2; x <= 2; x++) {
+  for (let z = -2; z <= 2; z++) {
+    const d = Math.max(Math.abs(x), Math.abs(z));
+    if (d === 2) {
+      world.setBlock(Vec3(x, 1, z), Block('smooth_quartz_stairs', { facing: 'north', half: 'bottom' }));
+    } else {
+      world.setBlock(Vec3(x, 1, z), Block('polished_blackstone'));
+    }
+  }
+}
+// Núcleo de Poder Cuántico / Faro del Campeón
+world.setBlock(Vec3(0, 1, 0), Block('gold_block'));
+world.setBlock(Vec3(0, 2, 0), Block('sea_lantern'));
+world.setBlock(Vec3(0, 3, 0), Block('end_rod'));
+
+// 4 Torres Tácticas de Combate y Francotirador en los Cuadrantes
+const tacticalPylons = [
+  { x: -7, z: -7 }, { x: 7, z: -7 },
+  { x: -7, z: 7 },  { x: 7, z: 7 }
+];
+
+for (const p of tacticalPylons) {
+  for (let y = 1; y <= 4; y++) {
+    world.setBlock(Vec3(p.x, y, p.z), Block('deepslate_bricks'));
+    world.setBlock(Vec3(p.x + 1, y, p.z), Block('iron_bars'));
+    world.setBlock(Vec3(p.x - 1, y, p.z), Block('iron_bars'));
+    world.setBlock(Vec3(p.x, y, p.z + 1), Block('iron_bars'));
+    world.setBlock(Vec3(p.x, y, p.z - 1), Block('iron_bars'));
+  }
+  // Plataforma de arquero a Y = 5
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dz = -1; dz <= 1; dz++) {
+      world.setBlock(Vec3(p.x + dx, 5, p.z + dz), Block('smooth_quartz'));
+    }
+  }
+  world.setBlock(Vec3(p.x, 5, p.z), Block('ochre_froglight'));
+  world.setBlock(Vec3(p.x - 1, 6, p.z), Block('iron_bars'));
+  world.setBlock(Vec3(p.x + 1, 6, p.z), Block('iron_bars'));
+  world.setBlock(Vec3(p.x, 6, p.z - 1), Block('iron_bars'));
+  world.setBlock(Vec3(p.x, 6, p.z + 1), Block('iron_bars'));
+}
+
+// Fortalezas de Spawn de Equipos (Norte = Azul, Sur = Rojo)
+// Spawn Azul (Norte: Z = -12 a -10, X = -3 a 3)
+for (let x = -3; x <= 3; x++) {
+  for (let z = -12; z <= -10; z++) {
+    world.setBlock(Vec3(x, 1, z), Block(Math.abs(x) <= 1 ? 'blue_concrete' : 'polished_deepslate'));
+    if (Math.abs(x) === 0 && z === -11) world.setBlock(Vec3(x, 2, z), Block('blue_carpet'));
+  }
+}
+world.setBlock(Vec3(-3, 1, -12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(-3, 2, -12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(3, 1, -12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(3, 2, -12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(-3, 3, -12), Block('sea_lantern'));
+world.setBlock(Vec3(3, 3, -12), Block('sea_lantern'));
+world.setBlock(Vec3(0, 2, -12), Block('sea_lantern'));
+
+// Spawn Rojo (Sur: Z = 10 a 12, X = -3 a 3)
+for (let x = -3; x <= 3; x++) {
+  for (let z = 10; z <= 12; z++) {
+    world.setBlock(Vec3(x, 1, z), Block(Math.abs(x) <= 1 ? 'red_concrete' : 'polished_deepslate'));
+    if (Math.abs(x) === 0 && z === 11) world.setBlock(Vec3(x, 2, z), Block('red_carpet'));
+  }
+}
+world.setBlock(Vec3(-3, 1, 12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(-3, 2, 12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(3, 1, 12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(3, 2, 12), Block('quartz_pillar', { axis: 'y' }));
+world.setBlock(Vec3(-3, 3, 12), Block('ochre_froglight'));
+world.setBlock(Vec3(3, 3, 12), Block('ochre_froglight'));
+world.setBlock(Vec3(0, 2, 12), Block('ochre_froglight'));
+
+// Barricadas Tácticas Blindadas en el Foso
+for (const bx of [-4, 4]) {
+  for (const bz of [-2, 2]) {
+    world.setBlock(Vec3(bx, 1, bz), Block('iron_block'));
+    world.setBlock(Vec3(bx, 2, bz), Block('iron_bars'));
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 6. MARCADOR ELECTRÓNICO GIGANTE JUMBOTRON 360° SUSPENDIDO DEL ÓCULO
+// ----------------------------------------------------------------------------
+// Cadenas de suspensión desde el anillo de luces del óculo (Y = 16 bajando a Y = 13)
+for (let y = 13; y <= 16; y++) {
+  world.setBlock(Vec3(-3, y, -3), Block('chain'));
+  world.setBlock(Vec3(3, y, -3), Block('chain'));
+  world.setBlock(Vec3(-3, y, 3), Block('chain'));
+  world.setBlock(Vec3(3, y, 3), Block('chain'));
+}
+
+// Pantallas del Jumbotron de 4 caras (Y = 10 a 12, X = -3 a 3, Z = -3 a 3)
+for (let y = 10; y <= 12; y++) {
+  for (let x = -3; x <= 3; x++) {
+    for (let z = -3; z <= 3; z++) {
+      const isEdge = (Math.abs(x) === 3 && Math.abs(z) === 3);
+      const isFace = (Math.abs(x) === 3 || Math.abs(z) === 3);
+
+      if (isEdge) {
+        world.setBlock(Vec3(x, y, z), Block('polished_blackstone'));
+      } else if (isFace) {
+        if (y === 10 || y === 12) {
+          world.setBlock(Vec3(x, y, z), Block('gold_block'));
+        } else if (y === 11) {
+          const isBlue = (x < 0 || z < 0);
+          world.setBlock(Vec3(x, y, z), Block(isBlue ? 'blue_concrete' : 'red_concrete'));
+        }
+      } else if (y === 10 || y === 12) {
+        world.setBlock(Vec3(x, y, z), Block('polished_blackstone'));
+      }
+    }
+  }
+}
+
+// Sonido y baliza central bajo el marcador
+world.setBlock(Vec3(0, 9, 0), Block('sea_lantern'));
+world.setBlock(Vec3(0, 8, 0), Block('end_rod'));

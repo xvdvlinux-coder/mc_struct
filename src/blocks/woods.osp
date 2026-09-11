@@ -1,0 +1,42 @@
+// blocks/woods.osp - Coleccion completa de maderas nobles y carpinteria
+
+import { createBlock } from "./utils.osp";
+
+export val WOOD_BLOCKS = {
+  // Roble Oscuro
+  "dark_oak_planks": createBlock("minecraft:dark_oak_planks", "Madera de Roble Oscuro", "cube", 0x432B15, { "roughness": 0.7 }),
+  "dark_oak_stairs": createBlock("minecraft:dark_oak_stairs", "Escaleras de Roble Oscuro", "stair", 0x432B15, { "roughness": 0.7 }),
+  "dark_oak_slab": createBlock("minecraft:dark_oak_slab", "Losa de Roble Oscuro", "slab", 0x432B15, { "roughness": 0.7 }),
+  "dark_oak_fence": createBlock("minecraft:dark_oak_fence", "Valla de Roble Oscuro", "fence", 0x432B15, { "roughness": 0.7 }),
+
+  // Abeto
+  "spruce_planks": createBlock("minecraft:spruce_planks", "Madera de Abeto", "cube", 0x674B2F, { "roughness": 0.7 }),
+  "spruce_stairs": createBlock("minecraft:spruce_stairs", "Escaleras de Abeto", "stair", 0x674B2F, { "roughness": 0.7 }),
+  "spruce_slab": createBlock("minecraft:spruce_slab", "Losa de Abeto", "slab", 0x674B2F, { "roughness": 0.7 }),
+  "spruce_fence": createBlock("minecraft:spruce_fence", "Valla de Abeto", "fence", 0x674B2F, { "roughness": 0.7 }),
+
+  // Roble Clasico
+  "oak_planks": createBlock("minecraft:oak_planks", "Madera de Roble", "cube", 0x9B7A46, { "roughness": 0.7 }),
+  "oak_stairs": createBlock("minecraft:oak_stairs", "Escaleras de Roble", "stair", 0x9B7A46, { "roughness": 0.7 }),
+  "oak_slab": createBlock("minecraft:oak_slab", "Losa de Roble", "slab", 0x9B7A46, { "roughness": 0.7 }),
+  "oak_fence": createBlock("minecraft:oak_fence", "Valla de Roble", "fence", 0x9B7A46, { "roughness": 0.7 }),
+
+  // Abedul
+  "birch_planks": createBlock("minecraft:birch_planks", "Madera de Abedul", "cube", 0xD0C28A, { "roughness": 0.7 }),
+  "birch_stairs": createBlock("minecraft:birch_stairs", "Escaleras de Abedul", "stair", 0xD0C28A, { "roughness": 0.7 }),
+  "birch_slab": createBlock("minecraft:birch_slab", "Losa de Abedul", "slab", 0xD0C28A, { "roughness": 0.7 }),
+  "birch_fence": createBlock("minecraft:birch_fence", "Valla de Abedul", "fence", 0xD0C28A, { "roughness": 0.7 }),
+
+  // Cerezo (Cherry)
+  "cherry_planks": createBlock("minecraft:cherry_planks", "Madera de Cerezo", "cube", 0xE5A6A6, { "roughness": 0.6 }),
+  "cherry_stairs": createBlock("minecraft:cherry_stairs", "Escaleras de Cerezo", "stair", 0xE5A6A6, { "roughness": 0.6 }),
+  "cherry_slab": createBlock("minecraft:cherry_slab", "Losa de Cerezo", "slab", 0xE5A6A6, { "roughness": 0.6 }),
+
+  // Mangle (Mangrove)
+  "mangrove_planks": createBlock("minecraft:mangrove_planks", "Madera de Mangle", "cube", 0x763131, { "roughness": 0.7 }),
+  "mangrove_stairs": createBlock("minecraft:mangrove_stairs", "Escaleras de Mangle", "stair", 0x763131, { "roughness": 0.7 }),
+
+  // Bambu (Bamboo)
+  "bamboo_planks": createBlock("minecraft:bamboo_planks", "Tablones de Bambu", "cube", 0xC0AC41, { "roughness": 0.6 }),
+  "bamboo_mosaic": createBlock("minecraft:bamboo_mosaic", "Mosaico de Bambu", "cube", 0xBBA63D, { "roughness": 0.5 })
+};

@@ -1,0 +1,62 @@
+// blocks/deepslate.osp - Pizarra profunda y piedras oscuras
+
+export val DEEPSLATE_BLOCKS = {
+  "polished_deepslate": {
+    "bedrockId": "minecraft:polished_deepslate",
+    "shape": "cube",
+    "color": 0x333338,
+    "roughness": 0.5,
+    "name": "Pizarra Profunda Pulida"
+  },
+  "deepslate_bricks": {
+    "bedrockId": "minecraft:deepslate_bricks",
+    "shape": "cube",
+    "color": 0x28282C,
+    "roughness": 0.6,
+    "name": "Ladrillos de Pizarra Profunda"
+  },
+  "chiseled_deepslate": {
+    "bedrockId": "minecraft:chiseled_deepslate",
+    "shape": "cube",
+    "color": 0x2A2A2E,
+    "roughness": 0.5,
+    "name": "Pizarra Cincelada"
+  },
+  "polished_deepslate_stairs": {
+    "bedrockId": "minecraft:polished_deepslate_stairs",
+    "shape": "stair",
+    "color": 0x333338,
+    "roughness": 0.5,
+    "name": "Escaleras de Pizarra Pulida",
+    "defaultStates": { "facing": "north", "half": "bottom" }
+  },
+  "polished_deepslate_slab": {
+    "bedrockId": "minecraft:polished_deepslate_slab",
+    "shape": "slab",
+    "color": 0x333338,
+    "roughness": 0.5,
+    "name": "Losa de Pizarra Pulida",
+    "defaultStates": { "half": "bottom" }
+  },
+  "polished_blackstone": {
+    "bedrockId": "minecraft:polished_blackstone",
+    "shape": "cube",
+    "color": 0x222226,
+    "roughness": 0.4,
+    "name": "Piedra Negra Pulida"
+  },
+  "polished_blackstone_bricks": {
+    "bedrockId": "minecraft:polished_blackstone_bricks",
+    "shape": "cube",
+    "color": 0x1D1D20,
+    "roughness": 0.5,
+    "name": "Ladrillos de Piedra Negra"
+  },
+  "black_concrete": {
+    "bedrockId": "minecraft:black_concrete",
+    "shape": "cube",
+    "color": 0x101114,
+    "roughness": 0.8,
+    "name": "Hormigon Negro"
+  }
+};

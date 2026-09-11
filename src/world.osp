@@ -1,0 +1,179 @@
+// world.osp - Matriz Voxel 3D discreta e ingenieria espacial en Oriented-Direct
+
+import { Vec3, Block } from "./types.osp";
+
+fn mirrorX(centerX) {
+  return (coord, block) => {
+    val newX = Math.round(2 * centerX - coord.x);
+    val newCoord = new Vec3(newX, coord.y, coord.z);
+    
+    // Invertir estados de orientacion si es necesario
+    val newStates = { ...block.states };
+    if (block.definition.shape is "stair") {
+      if (newStates.facing is "east") newStates.facing = "west";
+      else if (newStates.facing is "west") newStates.facing = "east";
+    }
+    return { "coord": newCoord, "block": new Block(block.id, newStates) };
+  };
+}
+
+fn mirrorZ(centerZ) {
+  return (coord, block) => {
+    val newZ = Math.round(2 * centerZ - coord.z);
+    val newCoord = new Vec3(coord.x, coord.y, newZ);
+
+    val newStates = { ...block.states };
+    if (block.definition.shape is "stair") {
+      if (newStates.facing is "north") newStates.facing = "south";
+      else if (newStates.facing is "south") newStates.facing = "north";
+    }
+    return { "coord": newCoord, "block": new Block(block.id, newStates) };
+  };
+}
+
+val Symmetry = {
+  "mirrorX": mirrorX,
+  "mirrorZ": mirrorZ
+};
+
+class World3D {
+  constructor() {
+    this.blocks = new Map(); // key: "x,y,z" -> { coord: Vec3, block: Block }
+    this.activeTransforms = [];
+  }
+
+  setBlock(coord, block) {
+    unless (coord instanceof Vec3) {
+      throw new Error(`Coordenada invalida en setBlock. Debe ser instancia de Vec3.`);
+    }
+    unless (block instanceof Block) {
+      throw new Error(`Bloque invalido en setBlock. Debe ser instancia de Block.`);
+    }
+
+    // Colocar el bloque primario
+    this._place(coord, block);
+
+    // Aplicar transformaciones simetricas si estan activas
+    val totalTransforms = this.activeTransforms.length;
+    for (mut i = 0; i < totalTransforms; i += 1) {
+      val transform = this.activeTransforms[i];
+      val mirrored = transform(coord, block);
+      if (mirrored) {
+        this._place(mirrored.coord, mirrored.block);
+      }
+    }
+  }
+
+  _place(coord, block) {
+    this.blocks.set(coord.toKey(), { "coord": coord.clone(), "block": block });
+  }
+
+  getBlock(coord) {
+    val entry = this.blocks.get(coord.toKey());
+    return entry ? entry.block : null;
+  }
+
+  removeBlock(coord) {
+    this.blocks.delete(coord.toKey());
+  }
+
+  withSymmetry(transform, callbackFn) {
+    this.activeTransforms.push(transform);
+    try {
+      callbackFn(this);
+    } finally {
+      this.activeTransforms.pop();
+    }
+  }
+
+  getBounds() {
+    if (this.blocks.size is 0) {
+      return {
+        "min": new Vec3(0, 0, 0),
+        "max": new Vec3(0, 0, 0),
+        "dimensions": new Vec3(0, 0, 0),
+        "total": 0
+      };
+    }
+
+    mut minX = Infinity;
+    mut minY = Infinity;
+    mut minZ = Infinity;
+    mut maxX = -Infinity;
+    mut maxY = -Infinity;
+    mut maxZ = -Infinity;
+
+    val entries = Array["from"](this.blocks.values());
+    val totalEntries = entries.length;
+    for (mut i = 0; i < totalEntries; i += 1) {
+      val entry = entries[i];
+      val coord = entry.coord;
+      if (coord.x < minX) minX = coord.x;
+      if (coord.y < minY) minY = coord.y;
+      if (coord.z < minZ) minZ = coord.z;
+      if (coord.x > maxX) maxX = coord.x;
+      if (coord.y > maxY) maxY = coord.y;
+      if (coord.z > maxZ) maxZ = coord.z;
+    }
+
+    val min = new Vec3(minX, minY, minZ);
+    val max = new Vec3(maxX, maxY, maxZ);
+    val dimensions = new Vec3(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
+
+    return {
+      "min": min,
+      "max": max,
+      "dimensions": dimensions,
+      "total": this.blocks.size
+    };
+  }
+
+  getLayer(y) {
+    val layerBlocks = [];
+    val entries = Array["from"](this.blocks.values());
+    val totalEntries = entries.length;
+    for (mut i = 0; i < totalEntries; i += 1) {
+      val entry = entries[i];
+      if (entry.coord.y is y) {
+        layerBlocks.push(entry);
+      }
+    }
+    return layerBlocks;
+  }
+
+  // Serializa todos los bloques para el cliente Three.js
+  serialize() {
+    val list = [];
+    val entries = Array["from"](this.blocks.values());
+    val totalEntries = entries.length;
+    for (mut i = 0; i < totalEntries; i += 1) {
+      val entry = entries[i];
+      val coord = entry.coord;
+      val block = entry.block;
+      val def = block.definition;
+      list.push({
+        "x": coord.x,
+        "y": coord.y,
+        "z": coord.z,
+        "id": block.id,
+        "bedrockId": def.bedrockId,
+        "name": def.name,
+        "shape": def.shape,
+        "states": block.states,
+        "color": def.color,
+        "roughness": (def.roughness is not undefined) ? def.roughness : 0.5,
+        "metalness": (def.metalness is not undefined) ? def.metalness : 0.0,
+        "emissive": def.emissive or 0x000000,
+        "emissiveIntensity": def.emissiveIntensity or 0.0,
+        "opacity": (def.opacity is not undefined) ? def.opacity : 1.0,
+        "transparent": Boolean(def.transparent)
+      });
+    }
+    return {
+      "bounds": this.getBounds(),
+      "blocks": list
+    };
+  }
+}
+
+export { Symmetry, World3D };

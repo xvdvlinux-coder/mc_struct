@@ -1,0 +1,140 @@
+// geometries.osp - Constructores de geometrias precisas de Minecraft para Three.js en Oriented-Direct
+
+val THREE = @win.THREE;
+val BoxGeometry = THREE.BoxGeometry;
+val MeshStandardMaterial = THREE.MeshStandardMaterial;
+val Mesh = THREE.Mesh;
+val Group = THREE.Group;
+
+// Cache de geometrias base reutilizables
+val cubeGeo = new BoxGeometry(1, 1, 1);
+val slabGeo = new BoxGeometry(1, 0.5, 1);
+val carpetGeo = new BoxGeometry(1, 0.0625, 1);
+val chainGeo = new BoxGeometry(0.16, 1, 0.16);
+val lanternGeo = new BoxGeometry(0.4, 0.5, 0.4);
+val barCenterGeo = new BoxGeometry(0.15, 1, 0.15);
+val endRodGeo = new BoxGeometry(0.14, 1, 0.14);
+val paneGeo = new BoxGeometry(1, 1, 0.08);
+
+// Crea la malla Three.js correspondiente a un bloque segun su forma y estados
+export fn createBlockMesh(blockData) {
+  val shape = blockData.shape;
+  val states = blockData.states;
+  val color = blockData.color;
+  val roughness = (blockData.roughness is not undefined) ? blockData.roughness : 0.5;
+  val metalness = (blockData.metalness is not undefined) ? blockData.metalness : 0.0;
+  val emissive = blockData.emissive or 0x000000;
+  val emissiveIntensity = blockData.emissiveIntensity or 0.0;
+  val opacity = (blockData.opacity is not undefined) ? blockData.opacity : 1.0;
+  val transparent = Boolean(blockData.transparent);
+
+  val mat = new MeshStandardMaterial({
+    "color": color or 0xCCCCCC,
+    "roughness": roughness,
+    "metalness": metalness,
+    "emissive": emissive,
+    "emissiveIntensity": emissiveIntensity,
+    "opacity": opacity,
+    "transparent": transparent
+  });
+
+  val group = new Group();
+
+  match (shape) {
+    case "cube" => {
+      val mesh = new Mesh(cubeGeo, mat);
+      group.add(mesh);
+    }
+
+    case "pillar" => {
+      val mesh = new Mesh(cubeGeo, mat);
+      if (states?.axis is "x") mesh.rotation.z = Math.PI / 2;
+      if (states?.axis is "z") mesh.rotation.x = Math.PI / 2;
+      group.add(mesh);
+    }
+
+    case "slab" => {
+      val mesh = new Mesh(slabGeo, mat);
+      mesh.position.y = (states?.half is "top") ? 0.25 : -0.25;
+      group.add(mesh);
+    }
+
+    case "carpet" => {
+      val mesh = new Mesh(carpetGeo, mat);
+      mesh.position.y = -0.5 + (0.0625 / 2);
+      group.add(mesh);
+    }
+
+    case "stair" => {
+      val baseMesh = new Mesh(slabGeo, mat);
+      val stepGeo = new BoxGeometry(1, 0.5, 0.5);
+      val stepMesh = new Mesh(stepGeo, mat);
+
+      val isUpsideDown = (states?.half is "top");
+      baseMesh.position.y = isUpsideDown ? 0.25 : -0.25;
+      stepMesh.position.y = isUpsideDown ? -0.25 : 0.25;
+      stepMesh.position.z = -0.25;
+
+      val stairLocal = new Group();
+      stairLocal.add(baseMesh);
+      stairLocal.add(stepMesh);
+
+      val facing = states?.facing or "north";
+      if (facing is "south") stairLocal.rotation.y = Math.PI;
+      else if (facing is "west") stairLocal.rotation.y = Math.PI / 2;
+      else if (facing is "east") stairLocal.rotation.y = -Math.PI / 2;
+
+      group.add(stairLocal);
+    }
+
+    case "chain" => {
+      val mesh = new Mesh(chainGeo, mat);
+      group.add(mesh);
+    }
+
+    case "end_rod" => {
+      val mesh = new Mesh(endRodGeo, mat);
+      group.add(mesh);
+    }
+
+    case "lantern" => {
+      val mesh = new Mesh(lanternGeo, mat);
+      mesh.position.y = states?.hanging ? 0.25 : -0.25;
+      group.add(mesh);
+    }
+
+    case "bars" => {
+      val center = new Mesh(barCenterGeo, mat);
+      val crossX = new Mesh(new BoxGeometry(1, 0.8, 0.1), mat);
+      group.add(center);
+      group.add(crossX);
+    }
+
+    case "fence" => {
+      val center = new Mesh(barCenterGeo, mat);
+      val crossX = new Mesh(new BoxGeometry(1, 0.8, 0.1), mat);
+      group.add(center);
+      group.add(crossX);
+    }
+
+    case "pane" => {
+      val mesh = new Mesh(paneGeo, mat);
+      group.add(mesh);
+    }
+
+    case "glass" => {
+      val mesh = new Mesh(cubeGeo, mat);
+      group.add(mesh);
+    }
+
+    default => {
+      val mesh = new Mesh(cubeGeo, mat);
+      group.add(mesh);
+    }
+  }
+
+  group.position.set(blockData.x, blockData.y, blockData.z);
+  group.userData = { ...blockData };
+
+  return group;
+}

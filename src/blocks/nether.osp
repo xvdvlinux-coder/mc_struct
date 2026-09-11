@@ -1,0 +1,26 @@
+// blocks/nether.osp - Rocas del Nether, ladrillos infernales y maderas fungales
+
+import { createBlock } from "./utils.osp";
+
+export val NETHER_BLOCKS = {
+  // Ladrillos del Nether
+  "nether_brick": createBlock("minecraft:nether_brick", "Ladrillos del Nether", "cube", 0x2D161B),
+  "nether_brick_stairs": createBlock("minecraft:nether_brick_stairs", "Escaleras del Nether", "stair", 0x2D161B),
+  "nether_brick_slab": createBlock("minecraft:nether_brick_slab", "Losa del Nether", "slab", 0x2D161B),
+  "red_nether_brick": createBlock("minecraft:red_nether_brick", "Ladrillos Rojos del Nether", "cube", 0x47080B),
+
+  // Basalto
+  "basalt": createBlock("minecraft:basalt", "Basalto", "pillar", 0x4F4B4F),
+  "polished_basalt": createBlock("minecraft:polished_basalt", "Basalto Pulido", "pillar", 0x58555B),
+  "smooth_basalt": createBlock("minecraft:smooth_basalt", "Basalto Liso", "cube", 0x434145),
+
+  // Obsidianas
+  "obsidian": createBlock("minecraft:obsidian", "Obsidiana", "cube", 0x14101E),
+  "crying_obsidian": createBlock("minecraft:crying_obsidian", "Obsidiana Llorosa", "cube", 0x25133E, { "emissive": 0x5D14B3, "emissiveIntensity": 0.5 }),
+
+  // Maderas Carmesi y Distorsionada
+  "crimson_planks": createBlock("minecraft:crimson_planks", "Madera Carmesi", "cube", 0x653046),
+  "crimson_stairs": createBlock("minecraft:crimson_stairs", "Escaleras Carmesi", "stair", 0x653046),
+  "warped_planks": createBlock("minecraft:warped_planks", "Madera Distorsionada", "cube", 0x2B6863),
+  "warped_stairs": createBlock("minecraft:warped_stairs", "Escaleras Distorsionadas", "stair", 0x2B6863)
+};

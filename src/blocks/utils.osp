@@ -1,0 +1,31 @@
+// blocks/utils.osp - Funcion auxiliar para registrar bloques en Oriented-Direct
+
+export fn createBlock(bedrockId, name, shape, color, opts = {}) {
+  val roughnessVal = (opts.roughness is not undefined) ? opts.roughness : 0.5;
+  val metalnessVal = (opts.metalness is not undefined) ? opts.metalness : 0.0;
+  val emissiveVal = opts.emissive or 0x000000;
+  val emissiveIntensityVal = opts.emissiveIntensity or 0.0;
+  val opacityVal = (opts.opacity is not undefined) ? opts.opacity : 1.0;
+  val isTransparent = Boolean(opts.transparent);
+
+  val defaultStatesVal = opts.defaultStates or (
+    (shape is "stair") ? { "facing": "north", "half": "bottom" } :
+    (shape is "slab") ? { "half": "bottom" } :
+    (shape is "pillar") ? { "axis": "y" } :
+    (shape is "lantern") ? { "hanging": false } : {}
+  );
+
+  return {
+    "bedrockId": bedrockId,
+    "name": name,
+    "shape": shape,
+    "color": color,
+    "roughness": roughnessVal,
+    "metalness": metalnessVal,
+    "emissive": emissiveVal,
+    "emissiveIntensity": emissiveIntensityVal,
+    "opacity": opacityVal,
+    "transparent": isTransparent,
+    "defaultStates": defaultStatesVal
+  };
+}

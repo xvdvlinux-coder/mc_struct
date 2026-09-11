@@ -1,0 +1,309 @@
+// ============================================================================
+// MAIN.BLOCK - PREMIERE DE CINE VIP COMPLETA
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 1. CALLE TRASERA, PLAZA Y PALMERAS (Z = -38 a -29)
+// ----------------------------------------------------------------------------
+for (let z = -38; z <= -28; z++) {
+  for (let x = -15; x <= 15; x++) world.setBlock(Vec3(x, 0, z), Block('smooth_stone'));
+}
+
+// Palmeras urbanas en la plaza exterior
+for (const px of [-10, -5, 5, 10]) {
+  for (let y = 1; y <= 6; y++) world.setBlock(Vec3(px, y, -34), Block('spruce_planks'));
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dz = -1; dz <= 1; dz++) {
+      world.setBlock(Vec3(px + dx, 7, -34 + dz), Block('oak_leaves'));
+    }
+  }
+}
+
+// Fachada urbana de fondo al final de la calle (Z = -38)
+for (let x = -15; x <= 15; x++) {
+  for (let y = 1; y <= 12; y++) {
+    const isWin = (y === 3 || y === 4 || y === 7 || y === 8) && (x % 3 !== 0);
+    world.setBlock(Vec3(x, y, -38), Block(isWin ? 'tinted_glass' : (Math.abs(x) <= 7 ? 'blue_concrete' : 'brick_block')));
+  }
+}
+
+// Limusina blanca VIP de lado / transversal (Z = -30 a -28, X = -5 a 5)
+world.setBlock(Vec3(-4, 0, -30), Block('black_concrete'));
+world.setBlock(Vec3(-4, 0, -28), Block('black_concrete'));
+world.setBlock(Vec3(4, 0, -30), Block('black_concrete'));
+world.setBlock(Vec3(4, 0, -28), Block('black_concrete'));
+
+for (let x = -5; x <= 5; x++) {
+  for (let z = -30; z <= -28; z++) {
+    world.setBlock(Vec3(x, 1, z), Block('smooth_quartz'));
+    if (x > -5 && x < 5) {
+      if (z === -29) world.setBlock(Vec3(x, 2, z), Block('red_carpet'));
+      else world.setBlock(Vec3(x, 2, z), Block('tinted_glass'));
+      world.setBlock(Vec3(x, 3, z), Block('smooth_quartz_slab', { half: 'bottom' }));
+    }
+  }
+}
+world.setBlock(Vec3(0, 2, -28), Block('red_carpet')); // Puerta abierta hacia la alfombra
+world.setBlock(Vec3(5, 1, -30), Block('sea_lantern'));
+world.setBlock(Vec3(5, 1, -28), Block('sea_lantern'));
+world.setBlock(Vec3(-5, 1, -30), Block('red_concrete'));
+world.setBlock(Vec3(-5, 1, -28), Block('red_concrete'));
+
+// ----------------------------------------------------------------------------
+// 2. PASARELA LARGA DE ALFOMBRA ROJA (Z = -27 a 0)
+// ----------------------------------------------------------------------------
+for (let z = -27; z <= 0; z++) {
+  for (let x = -3; x <= 3; x++) world.setBlock(Vec3(x, 0, z), Block('polished_deepslate'));
+  world.setBlock(Vec3(-2, 1, z), Block('yellow_carpet'));
+  world.setBlock(Vec3(2, 1, z), Block('yellow_carpet'));
+  world.setBlock(Vec3(-1, 1, z), Block('red_carpet'));
+  world.setBlock(Vec3(0, 1, z), Block('red_carpet'));
+  world.setBlock(Vec3(1, 1, z), Block('red_carpet'));
+}
+
+// Cordonado de postes dorados con faroles y cadenas (X = ±3)
+for (let z = -27; z <= -1; z++) {
+  for (const x of [-3, 3]) {
+    if (z % 3 === 0) {
+      world.setBlock(Vec3(x, 1, z), Block('gold_block'));
+      world.setBlock(Vec3(x, 2, z), Block('dark_oak_fence'));
+      world.setBlock(Vec3(x, 3, z), Block('lantern', { hanging: false }));
+    } else {
+      world.setBlock(Vec3(x, 1, z), Block('dark_oak_fence'));
+      world.setBlock(Vec3(x, 2, z), Block('chain'));
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 3. GRADERÍAS METÁLICAS DE FANS (Z = -26 a -9)
+// ----------------------------------------------------------------------------
+// Las gradas van a lo largo de la alfombra y terminan en Z = -9
+for (const sign of [-1, 1]) {
+  const tiers = [
+    { x: 4, y: 1 }, { x: 6, y: 2 }, { x: 8, y: 3 }, { x: 10, y: 4 }
+  ];
+  for (let z = -26; z <= -9; z++) {
+    for (let xOff = 4; xOff <= 11; xOff++) {
+      world.setBlock(Vec3(xOff * sign, 0, z), Block('stone_bricks'));
+    }
+    for (const tier of tiers) {
+      const tx = tier.x * sign;
+      for (let y = 1; y < tier.y; y++) world.setBlock(Vec3(tx, y, z), Block('iron_block'));
+      world.setBlock(Vec3(tx, tier.y, z), Block('smooth_stone_slab', { half: 'bottom' }));
+      world.setBlock(Vec3((tier.x + 1) * sign, tier.y, z), Block('iron_block'));
+    }
+    world.setBlock(Vec3(11 * sign, 5, z), Block('iron_bars')); // Barandilla trasera
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 4. ZONA DE FOTOGRAFÍA, CÁMARAS Y DIRECTOR (AL FINAL DE LA ALFOMBRA, Z = -8 a -2)
+// ----------------------------------------------------------------------------
+// Ubicado al lado antes de entrar a la estructura, donde terminan las gradas
+
+// LADO IZQUIERDO: SET DE FOTOGRAFÍA / PHOTOCALL (X = -11 a -4, Z = -8 a -2)
+for (let z = -8; z <= -2; z++) {
+  for (let x = -11; x <= -4; x++) world.setBlock(Vec3(x, 0, z), Block('smooth_stone'));
+  // Muro photocall de patrocinadores al fondo (X = -11)
+  for (let y = 1; y <= 5; y++) {
+    const isW = (Math.abs(z) + y) % 2 === 0;
+    world.setBlock(Vec3(-11, y, z), Block(isW ? 'smooth_quartz' : 'black_concrete'));
+  }
+  world.setBlock(Vec3(-11, 6, z), Block('ochre_froglight')); // Foco superior
+}
+// Alfombra roja que da paso al photocall
+for (let x = -10; x <= -4; x++) {
+  world.setBlock(Vec3(x, 1, -5), Block('red_carpet'));
+}
+
+// LADO DERECHO: SET DE CÁMARA DE TV, SILLA DE DIRECTOR Y ANDAMIO (X = 4 a 11, Z = -8 a -2)
+for (let z = -8; z <= -2; z++) {
+  for (let x = 4; x <= 11; x++) world.setBlock(Vec3(x, 0, z), Block('smooth_stone'));
+}
+
+// Estructura de andamiaje metálico (Truss) con focos de estudio sobre el set
+for (const z of [-8, -2]) {
+  for (let y = 1; y <= 6; y++) {
+    world.setBlock(Vec3(4, y, z), Block('iron_bars'));
+    world.setBlock(Vec3(11, y, z), Block('iron_bars'));
+  }
+  for (let x = 4; x <= 11; x++) {
+    world.setBlock(Vec3(x, 6, z), Block('iron_bars'));
+  }
+}
+for (let z = -8; z <= -2; z++) {
+  world.setBlock(Vec3(4, 6, z), Block('iron_bars'));
+  world.setBlock(Vec3(11, 6, z), Block('iron_bars'));
+}
+// Focos colgados del truss apuntando a los famosos antes de entrar
+world.setBlock(Vec3(6, 5, -5), Block('ochre_froglight'));
+world.setBlock(Vec3(9, 5, -5), Block('ochre_froglight'));
+
+// Cámara profesional de TV sobre trípode (Foto 1)
+world.setBlock(Vec3(6, 1, -5), Block('iron_bars'));        // Trípode
+world.setBlock(Vec3(6, 2, -5), Block('black_concrete'));   // Cuerpo cámara
+world.setBlock(Vec3(5, 2, -5), Block('tinted_glass'));     // Objetivo apuntando hacia la alfombra
+
+// Sillas de director de cine (Foto 2)
+world.setBlock(Vec3(8, 1, -6), Block('dark_oak_stairs', { facing: 'west', half: 'bottom' }));
+world.setBlock(Vec3(8, 1, -4), Block('dark_oak_stairs', { facing: 'west', half: 'bottom' }));
+
+// Caja de equipo técnico / Flight case (Foto 1)
+world.setBlock(Vec3(8, 1, -2), Block('polished_deepslate'));
+
+// Muro negro de estudio al fondo de la estación (X = 11)
+for (let z = -8; z <= -2; z++) {
+  for (let y = 1; y <= 5; y++) world.setBlock(Vec3(11, y, z), Block('black_concrete'));
+}
+
+// Barandilla de seguridad baja frente a la cámara (Foto 1)
+for (let z = -8; z <= -2; z++) {
+  world.setBlock(Vec3(4, 1, z), Block('iron_bars'));
+}
+
+// ----------------------------------------------------------------------------
+// 5. FACHADA DE CINE: MARQUESINA LUMINOSA Y ARCO DE ENTRADA (Z = -3 a 1)
+// ----------------------------------------------------------------------------
+for (const sign of [-1, 1]) {
+  for (let xOff = 3; xOff <= 11; xOff++) {
+    const x = xOff * sign;
+    for (let y = 1; y <= 9; y++) world.setBlock(Vec3(x, y, 0), Block('quartz_bricks'));
+    world.setBlock(Vec3(x, 1, 0), Block('polished_deepslate'));
+    world.setBlock(Vec3(x, 10, 0), Block('smooth_quartz_slab', { half: 'bottom' }));
+  }
+  const px = 3 * sign;
+  world.setBlock(Vec3(px, 1, 1), Block('chiseled_deepslate'));
+  for (let y = 2; y <= 8; y++) world.setBlock(Vec3(px, y, 1), Block('quartz_pillar', { axis: 'y' }));
+  world.setBlock(Vec3(px, 9, 1), Block('chiseled_quartz_block'));
+}
+
+// Gran Arco de Entrada
+const archDir = { [-1]: 'east', [1]: 'west' };
+for (const sign of [-1, 1]) {
+  world.setBlock(Vec3(2 * sign, 5, 0), Block('smooth_quartz_stairs', { facing: archDir[sign], half: 'top' }));
+  world.setBlock(Vec3(1 * sign, 6, 0), Block('smooth_quartz_stairs', { facing: archDir[sign], half: 'top' }));
+}
+world.setBlock(Vec3(0, 7, 0), Block('smooth_quartz'));
+world.setBlock(Vec3(0, 6, 0), Block('sea_lantern'));
+
+// Marquesina luminosa de cine sobre la entrada
+for (let x = -8; x <= 8; x++) {
+  for (let z = -3; z <= 0; z++) {
+    world.setBlock(Vec3(x, 10, z), Block('polished_blackstone'));
+    if (z === -3 || Math.abs(x) === 8) world.setBlock(Vec3(x, 9, z), Block('ochre_froglight'));
+  }
+  world.setBlock(Vec3(x, 11, -3), Block('gold_block'));
+  world.setBlock(Vec3(x, 12, -3), Block(Math.abs(x) % 2 === 0 ? 'sea_lantern' : 'red_concrete'));
+}
+
+// ----------------------------------------------------------------------------
+// 6. GRAN VESTÍBULO / HUB DE ENTRADA (Z = 1 a 22, X = -10 a 10)
+// ----------------------------------------------------------------------------
+for (let z = 1; z <= 22; z++) {
+  for (let x = -10; x <= 10; x++) {
+    const isEven = (Math.abs(x) + z) % 2 === 0;
+    world.setBlock(Vec3(x, 0, z), Block(isEven ? 'smooth_quartz' : 'polished_deepslate'));
+    if (Math.abs(x) <= 1 && z <= 18) world.setBlock(Vec3(x, 1, z), Block('red_carpet'));
+    else if (Math.abs(x) === 2 && z <= 18) world.setBlock(Vec3(x, 1, z), Block('yellow_carpet'));
+  }
+}
+
+for (let y = 1; y <= 8; y++) {
+  for (let z = 1; z <= 22; z++) {
+    for (const x of [-10, 10]) {
+      if (y >= 3 && y <= 6 && z % 4 !== 0) world.setBlock(Vec3(x, y, z), Block('tinted_glass'));
+      else world.setBlock(Vec3(x, y, z), Block(y === 1 ? 'polished_deepslate' : 'quartz_bricks'));
+    }
+  }
+}
+
+const colZs = [4, 9, 14, 19];
+for (const x of [-5, 5]) {
+  for (const z of colZs) {
+    world.setBlock(Vec3(x, 1, z), Block('chiseled_deepslate'));
+    world.setBlock(Vec3(x, 2, z), Block('polished_deepslate'));
+    for (let y = 3; y <= 6; y++) world.setBlock(Vec3(x, y, z), Block('quartz_pillar', { axis: 'y' }));
+    world.setBlock(Vec3(x, 7, z), Block('chiseled_quartz_block'));
+    world.setBlock(Vec3(x, 8, z), Block('gold_block'));
+    world.setBlock(Vec3(x - 1, 8, z), Block('smooth_quartz_stairs', { facing: 'east', half: 'top' }));
+    world.setBlock(Vec3(x + 1, 8, z), Block('smooth_quartz_stairs', { facing: 'west', half: 'top' }));
+  }
+}
+
+for (let z = 1; z <= 22; z++) {
+  for (let x = -10; x <= 10; x++) {
+    if (x === -5 || x === 0 || x === 5 || colZs.includes(z)) world.setBlock(Vec3(x, 9, z), Block('dark_oak_planks'));
+    else world.setBlock(Vec3(x, 9, z), Block('smooth_quartz_slab', { half: 'top' }));
+  }
+}
+
+// Candelabro central de araña
+world.setBlock(Vec3(0, 9, 11), Block('gold_block'));
+world.setBlock(Vec3(0, 8, 11), Block('chain'));
+world.setBlock(Vec3(0, 7, 11), Block('chain'));
+world.setBlock(Vec3(0, 6, 11), Block('sea_lantern'));
+[{ x: -1, z: 0 }, { x: 1, z: 0 }, { x: 0, z: -1 }, { x: 0, z: 1 }].forEach(off => {
+  world.setBlock(Vec3(off.x, 6, 11 + off.z), Block('gold_block'));
+  world.setBlock(Vec3(off.x, 5, 11 + off.z), Block('end_rod'));
+  world.setBlock(Vec3(off.x, 7, 11 + off.z), Block('lantern', { hanging: true }));
+});
+
+// Mostrador de recepción VIP
+for (let x = -3; x <= 3; x++) {
+  world.setBlock(Vec3(x, 1, 20), Block('polished_deepslate'));
+  world.setBlock(Vec3(x, 2, 20), Block('smooth_quartz_slab', { half: 'bottom' }));
+}
+world.setBlock(Vec3(-2, 3, 20), Block('lantern', { hanging: false }));
+world.setBlock(Vec3(2, 3, 20), Block('lantern', { hanging: false }));
+
+// ----------------------------------------------------------------------------
+// 7. GRAN SALA DE CINE CON GRADAS ESCALONADAS Y PANTALLA GIGANTE (Z = 23 a 48)
+// ----------------------------------------------------------------------------
+for (let z = 23; z <= 48; z++) {
+  for (let x = -13; x <= 13; x++) world.setBlock(Vec3(x, 0, z), Block('polished_deepslate'));
+  for (let y = 1; y <= 12; y++) {
+    world.setBlock(Vec3(-13, y, z), Block(y % 2 === 0 ? 'dark_oak_planks' : 'deepslate_bricks'));
+    world.setBlock(Vec3(13, y, z), Block(y % 2 === 0 ? 'dark_oak_planks' : 'deepslate_bricks'));
+  }
+}
+for (let x = -13; x <= 13; x++) {
+  for (let y = 1; y <= 12; y++) world.setBlock(Vec3(x, y, 48), Block('black_concrete'));
+}
+
+const cinemaTiers = [
+  { z: 25, y: 1 }, { z: 28, y: 2 }, { z: 31, y: 3 },
+  { z: 34, y: 4 }, { z: 37, y: 5 }, { z: 40, y: 6 }
+];
+for (const t of cinemaTiers) {
+  for (let zOff = 0; zOff <= 2; zOff++) {
+    const cz = t.z + zOff;
+    for (let x = -11; x <= 11; x++) {
+      for (let y = 1; y <= t.y; y++) world.setBlock(Vec3(x, y, cz), Block('polished_deepslate'));
+    }
+  }
+  for (const sign of [-1, 1]) {
+    for (let sx = 3; sx <= 10; sx++) {
+      const x = sx * sign;
+      world.setBlock(Vec3(x, t.y + 1, t.z + 1), Block('dark_oak_stairs', { facing: 'south', half: 'bottom' }));
+      world.setBlock(Vec3(x, t.y + 2, t.z + 1), Block('red_carpet'));
+    }
+  }
+  world.setBlock(Vec3(0, t.y + 1, t.z), Block('red_carpet'));
+  world.setBlock(Vec3(-1, t.y + 1, t.z), Block('yellow_carpet'));
+  world.setBlock(Vec3(1, t.y + 1, t.z), Block('yellow_carpet'));
+  world.setBlock(Vec3(0, t.y, t.z), Block('sea_lantern'));
+}
+
+for (let x = -9; x <= 9; x++) {
+  for (let y = 2; y <= 9; y++) world.setBlock(Vec3(x, y, 46), Block('white_concrete'));
+  world.setBlock(Vec3(x, 1, 45), Block('polished_blackstone'));
+  if (Math.abs(x) % 3 === 0) world.setBlock(Vec3(x, 1, 44), Block('ochre_froglight'));
+}
+for (let y = 2; y <= 9; y++) {
+  world.setBlock(Vec3(-10, y, 46), Block('red_wool'));
+  world.setBlock(Vec3(10, y, 46), Block('red_wool'));
+}
+for (let z = 23; z <= 48; z++) {
+  for (let x = -13; x <= 13; x++) world.setBlock(Vec3(x, 12, z), Block('black_concrete'));
+}

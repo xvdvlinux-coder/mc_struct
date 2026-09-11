@@ -1,0 +1,21 @@
+// blocks/lights.osp - Fuentes de iluminacion, candelabros y linternas
+
+import { createBlock } from "./utils.osp";
+
+export val LIGHT_BLOCKS = {
+  // Linternas de Mar y Piedras Luminosas
+  "sea_lantern": createBlock("minecraft:sea_lantern", "Linterna de Mar", "cube", 0xBAEAE6, { "emissive": 0x90DFD8, "emissiveIntensity": 0.7 }),
+  "glowstone": createBlock("minecraft:glowstone", "Piedra Luminosa", "cube", 0xF5BA67, { "emissive": 0xF0AA40, "emissiveIntensity": 0.6 }),
+  "shroomlight": createBlock("minecraft:shroomlight", "Luz de Hongo", "cube", 0xF08A46, { "emissive": 0xEA7730, "emissiveIntensity": 0.6 }),
+  "redstone_lamp": createBlock("minecraft:redstone_lamp", "Lampara de Redstone", "cube", 0x5C381E, { "roughness": 0.5 }),
+
+  // Luces de Rana (Froglights)
+  "ochre_froglight": createBlock("minecraft:ochre_froglight", "Rana-Luz Ocre", "cube", 0xFDF4C9, { "emissive": 0xF5E49F, "emissiveIntensity": 0.6 }),
+  "pearlescent_froglight": createBlock("minecraft:pearlescent_froglight", "Rana-Luz Perlada", "cube", 0xF9D5EC, { "emissive": 0xF0C0E0, "emissiveIntensity": 0.6 }),
+  "verdant_froglight": createBlock("minecraft:verdant_froglight", "Rana-Luz Verdante", "cube", 0xD8F6D6, { "emissive": 0xC4ECC0, "emissiveIntensity": 0.6 }),
+
+  // Faroles y Candelabros
+  "lantern": createBlock("minecraft:lantern", "Farol / Linterna", "lantern", 0xE5A338, { "emissive": 0xFFA020, "emissiveIntensity": 0.8 }),
+  "soul_lantern": createBlock("minecraft:soul_lantern", "Farol de Alma (Azul)", "lantern", 0x48D8E5, { "emissive": 0x28B8D5, "emissiveIntensity": 0.8 }),
+  "end_rod": createBlock("minecraft:end_rod", "Vara del End", "end_rod", 0xFFFFFF, { "emissive": 0xEAEAEA, "emissiveIntensity": 0.9 })
+};
