@@ -278,12 +278,56 @@ async fn init() {
 
 // Boton de exportacion directa a .mcstructure de Minecraft Bedrock
 val btnExport = @id("btn-export-mcstructure");
+val inputStructureName = @id("input-structure-name");
 if (btnExport) {
   @on(btnExport, "click", () => {
     unless (currentWorld and currentWorld.blocks.size > 0) {
       showToast("No hay bloques en la escena para exportar.");
       return;
     }
+
+    mut name = "";
+    if (inputStructureName and inputStructureName.value) {
+      name = inputStructureName.value.trim();
+    }
+
+    unless (name) {
+      val promptFn = @win.prompt;
+      if (promptFn) {
+        val userPrompt = promptFn("Nombre del archivo .mcstructure:", "estructura");
+        if (userPrompt is null) {
+          return;
+        }
+        name = userPrompt.trim();
+      }
+    }
+
+    unless (name) {
+      name = "estructura";
+    }
+
+    if (name.toLowerCase().endsWith(".mcstructure")) {
+      name = name.slice(0, -12).trim();
+    }
+
+    mut safeName = "";
+    val totalChars = name.length;
+    for (mut i = 0; i < totalChars; i += 1) {
+      val ch = name[i];
+      val code = ch.charCodeAt(0);
+      if (ch is "/" or ch is ":" or ch is "*" or ch is "?" or ch is "<" or ch is ">" or ch is "|" or code is 92) {
+        safeName = `${safeName}_`;
+      } else {
+        safeName = `${safeName}${ch}`;
+      }
+    }
+    name = safeName.trim();
+    unless (name) {
+      name = "estructura";
+    }
+
+    val fileName = `${name}.mcstructure`;
+
     try {
       showToast("Generando .mcstructure...");
       val buffer = serializeMcStructure(currentWorld);
@@ -291,12 +335,12 @@ if (btnExport) {
       val blob = new BlobClass([buffer], { "type": "application/octet-stream" });
       val URLClass = @win.URL;
       val url = URLClass.createObjectURL(blob);
-      val a = @create("a", { "href": url, "download": "test_structure.mcstructure" });
+      val a = @create("a", { "href": url, "download": fileName });
       @doc.body.appendChild(a);
       a.click();
       @doc.body.removeChild(a);
       URLClass.revokeObjectURL(url);
-      showToast("¡test_structure.mcstructure descargado con exito!");
+      showToast(`¡${fileName} descargado con exito!`);
     } catch (err) {
       @error("[Export Error]:", err);
       showToast(`Error al exportar: ${err.message}`);
