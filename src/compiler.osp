@@ -84,6 +84,7 @@ export fn compileMainBlock(filePath = null) {
   @log(`[Compiler] Exito: ${exportResults.totalBlocks} bloques compilados.`);
   @log(`[Compiler] Dimensiones: ${serialized.bounds.dimensions.x} x ${serialized.bounds.dimensions.y} x ${serialized.bounds.dimensions.z}`);
   @log(`[Compiler] Coordenadas sincronizadas en public/coordinates.json`);
+  @log(`[Compiler] Archivo .mcstructure generado en: ${exportResults.structurePath}`);
 
   // Compilar automaticamente el frontend con ospc build
   val cp = process.getBuiltinModule("child_process");

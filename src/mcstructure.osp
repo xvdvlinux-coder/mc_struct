@@ -1,0 +1,107 @@
+// mcstructure.osp - Serializador binario .mcstructure para Bedrock en Oriented-Direct
+
+import { NbtWriter } from "./nbt_writer.osp";
+
+export fn serializeMcStructure(world) {
+  val bounds = world.getBounds();
+  val min = bounds.min;
+  val sizeX = Math.max(1, bounds.dimensions.x);
+  val sizeY = Math.max(1, bounds.dimensions.y);
+  val sizeZ = Math.max(1, bounds.dimensions.z);
+  val totalVoxels = sizeX * sizeY * sizeZ;
+
+  val palette = [];
+  val paletteMap = new Map();
+  val entries = Array["from"](world.blocks.values());
+  val totalEntries = entries.length;
+
+  for (mut i = 0; i < totalEntries; i += 1) {
+    val item = entries[i];
+    val blk = item.block;
+    val states = blk.getBedrockStates();
+    val key = `${blk.definition.bedrockId}|${JSON.stringify(states)}`;
+
+    if (not paletteMap.has(key)) {
+      paletteMap.set(key, palette.length);
+      palette.push({ "name": blk.definition.bedrockId, "states": states, "version": 18090528 });
+    }
+  }
+
+  val layer0 = new Int32Array(totalVoxels);
+  layer0.fill(-1);
+
+  for (mut i = 0; i < totalEntries; i += 1) {
+    val item = entries[i];
+    val relX = item.coord.x - min.x;
+    val relY = item.coord.y - min.y;
+    val relZ = item.coord.z - min.z;
+    val voxelIdx = (relX * sizeY + relY) * sizeZ + relZ;
+
+    val blk = item.block;
+    val states = blk.getBedrockStates();
+    val key = `${blk.definition.bedrockId}|${JSON.stringify(states)}`;
+    layer0[voxelIdx] = paletteMap.get(key);
+  }
+
+  val writer = new NbtWriter(totalVoxels * 8 + 16384);
+  writer.writeByte(10);
+  writer.writeShort(0);
+
+  // Metadatos principales
+  writer.writeNamedInt("format_version", 1);
+  writer.writeNamedList("size", 3, 3);
+  writer.writeInt(sizeX); writer.writeInt(sizeY); writer.writeInt(sizeZ);
+
+  writer.writeNamedList("structure_world_origin", 3, 3);
+  writer.writeInt(0); writer.writeInt(0); writer.writeInt(0);
+
+  // Arbol structure
+  writer.writeNamedCompound("structure");
+  writer.writeNamedList("block_indices", 9, 2);
+
+  // Capa 0 y Capa 1
+  writer.writeListHeader(3, totalVoxels);
+  for (mut i = 0; i < totalVoxels; i += 1) { writer.writeInt(layer0[i]); }
+
+  writer.writeListHeader(3, totalVoxels);
+  for (mut i = 0; i < totalVoxels; i += 1) { writer.writeInt(-1); }
+
+  writer.writeNamedList("entities", 10, 0);
+
+  // Palette default
+  writer.writeNamedCompound("palette");
+  writer.writeNamedCompound("default");
+  writer.writeNamedList("block_palette", 10, palette.length);
+
+  for (mut p = 0; p < palette.length; p += 1) {
+    val palEntry = palette[p];
+    writer.writeNamedString("name", palEntry.name);
+
+    writer.writeNamedCompound("states");
+    val keys = Object.keys(palEntry.states);
+    for (mut k = 0; k < keys.length; k += 1) {
+      val sKey = keys[k];
+      val sVal = palEntry.states[sKey];
+      if (typeof sVal is "number") {
+        if (sKey.endsWith("_bit") or sKey is "hanging") writer.writeNamedByte(sKey, sVal);
+        else writer.writeNamedInt(sKey, sVal);
+      } else {
+        writer.writeNamedString(sKey, String(sVal));
+      }
+    }
+    writer.writeEnd(); // states
+
+    writer.writeNamedInt("version", palEntry.version);
+    writer.writeEnd(); // palEntry
+  }
+
+  writer.writeNamedCompound("block_position_data");
+  writer.writeEnd(); // block_position_data
+
+  writer.writeEnd(); // default
+  writer.writeEnd(); // palette
+  writer.writeEnd(); // structure
+  writer.writeEnd(); // root
+
+  return writer.getBuffer();
+}

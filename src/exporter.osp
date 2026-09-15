@@ -1,7 +1,9 @@
-// exporter.osp - Genera coordinates.json, build.log y archivo .mcfunction para Minecraft Bedrock en Oriented-Direct
+// exporter.osp - Exportador de archivos .mcstructure binarios, coordinates.json y build.log para Minecraft Bedrock en Oriented-Direct
 
 val fs = process.getBuiltinModule("fs");
 val path = process.getBuiltinModule("path");
+
+import { serializeMcStructure } from "./mcstructure.osp";
 
 class Exporter {
   constructor(outputDir = "./output") {
@@ -15,24 +17,24 @@ class Exporter {
     val serialized = world.serialize();
     val bounds = serialized.bounds;
 
-    // 1. Exportar coordinates.json
+    // 1. Exportar coordinates.json para el visor Three.js
     val coordsPath = path.join(this.outputDir, "coordinates.json");
     fs.writeFileSync(coordsPath, JSON.stringify(serialized, null, 2), "utf-8");
 
-    // 2. Exportar build.log
+    // 2. Exportar build.log con auditoria de volumen y bloques
     val logContent = this._generateLog(serialized);
     val logPath = path.join(this.outputDir, "build.log");
     fs.writeFileSync(logPath, logContent, "utf-8");
 
-    // 3. Exportar .mcfunction ordenado por Y ascendente (cimientos primero)
-    val mcfunctionContent = this._generateMcFunction(world);
-    val mcfunctionPath = path.join(this.outputDir, `${filenamePrefix}.mcfunction`);
-    fs.writeFileSync(mcfunctionPath, mcfunctionContent, "utf-8");
+    // 3. Exportar archivo binario nativo .mcstructure para Structure Block de Bedrock
+    val structureBuffer = serializeMcStructure(world);
+    val structurePath = path.join(this.outputDir, `${filenamePrefix}.mcstructure`);
+    fs.writeFileSync(structurePath, structureBuffer);
 
     return {
       "coordsPath": coordsPath,
       "logPath": logPath,
-      "mcfunctionPath": mcfunctionPath,
+      "structurePath": structurePath,
       "totalBlocks": bounds.total
     };
   }
@@ -52,12 +54,13 @@ class Exporter {
 
     val lines = [
       "====================================================",
-      "        AUDITORIA DE ESTRUCTURA - MINECRAFT BEDROCK",
+      "     AUDITORIA DE ESTRUCTURA (.mcstructure) BEDROCK",
       "====================================================",
       `Fecha: ${new Date().toLocaleString()}`,
       `Total de Bloques: ${bounds.total}`,
       `Dimensiones (X x Y x Z): ${bounds.dimensions.x} x ${bounds.dimensions.y} x ${bounds.dimensions.z}`,
       `Limites: [${bounds.min.x}, ${bounds.min.y}, ${bounds.min.z}] hasta [${bounds.max.x}, ${bounds.max.y}, ${bounds.max.z}]`,
+      `Formato: Bedrock .mcstructure (Little-Endian NBT)`,
       "",
       "--- DESGLOSE POR TIPO DE BLOQUE ---"
     ];
@@ -81,30 +84,6 @@ class Exporter {
 
     lines.push("====================================================");
     return lines.join("\n");
-  }
-
-  _generateMcFunction(world) {
-    // Ordenar de menor a mayor Y para que las bases se creen antes que las alfombras o faroles
-    val sortedEntries = Array["from"](world.blocks.values()).sort((a, b) => {
-      if (a.coord.y is not b.coord.y) return a.coord.y - b.coord.y;
-      if (a.coord.z is not b.coord.z) return a.coord.z - b.coord.z;
-      return a.coord.x - b.coord.x;
-    });
-
-    val commands = [
-      "# Archivo .mcfunction generado para Minecraft Bedrock",
-      `# Total de bloques: ${sortedEntries.length}`,
-      "# Ejecutar con: /function <nombre_archivo>",
-      ""
-    ];
-
-    val totalSorted = sortedEntries.length;
-    for (mut i = 0; i < totalSorted; i += 1) {
-      val entry = sortedEntries[i];
-      commands.push(entry.block.toBedrockCommand(entry.coord));
-    }
-
-    return commands.join("\n");
   }
 }
 

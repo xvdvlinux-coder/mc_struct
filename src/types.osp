@@ -48,6 +48,37 @@ class Block {
     this.states = { ...baseStates, ...states };
   }
 
+  // Retorna objeto con pares clave-valor de estados para NBT de Bedrock
+  getBedrockStates() {
+    val def = this.definition;
+    val states = this.states;
+    val res = {};
+
+    if (def.shape is "stair") {
+      val dirMap = { "east": 0, "west": 1, "south": 2, "north": 3 };
+      val weirdo = (dirMap[states.facing] is not undefined) ? dirMap[states.facing] : 3;
+      val upsideDown = (states.half is "top") ? 1 : 0;
+      res["weirdo_direction"] = weirdo;
+      res["upside_down_bit"] = upsideDown;
+    }
+
+    if (def.shape is "pillar") {
+      val axis = states.axis or "y";
+      res["pillar_axis"] = axis;
+    }
+
+    if (def.shape is "slab") {
+      val topSlot = (states.half is "top") ? 1 : 0;
+      res["top_slot_bit"] = topSlot;
+    }
+
+    if (def.shape is "lantern") {
+      res["hanging"] = states.hanging ? 1 : 0;
+    }
+
+    return res;
+  }
+
   // Genera la sintaxis exacta de Bedrock con sus estados entre corchetes
   toBedrockCommand(coord) {
     val def = this.definition;

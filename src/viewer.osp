@@ -4,6 +4,7 @@ import { createBlockMesh } from "./geometries.osp";
 import { createInspector } from "./inspector.osp";
 import { Vec3, Block } from "./types.osp";
 import { World3D, Symmetry } from "./world.osp";
+import { serializeMcStructure } from "./mcstructure.osp";
 
 val THREE = @win.THREE;
 val OrbitControls = THREE.OrbitControls or @win.OrbitControls;
@@ -100,6 +101,7 @@ fn renderWorld(data) {
   inspector.setBlockMeshes(meshes, bounds.max.y);
 }
 
+mut currentWorld = null;
 mut lastBlockCount = -1;
 mut lastCode = "";
 
@@ -129,6 +131,7 @@ fn compileBlockCode(code) {
 
   val runner = new Function("ctx", `with (ctx) { ${code} }`);
   runner(context);
+  currentWorld = world;
   return world.serialize();
 }
 
@@ -158,7 +161,7 @@ async fn syncWorld() {
 }
 
 fn connectWS() {
-  if (socket is not null) {
+  if (socket) {
     socket.onopen = null;
     socket.onmessage = null;
     socket.onclose = null;
@@ -179,6 +182,8 @@ fn connectWS() {
     connStatus.className = "status-indicator";
     return;
   }
+
+  unless (socket) return;
 
   socket.onopen = () => {
     isConnected = true;
@@ -269,6 +274,34 @@ fn animate() {
 async fn init() {
   await syncWorld();
   setInterval(syncWorld, 1500);
+}
+
+// Boton de exportacion directa a .mcstructure de Minecraft Bedrock
+val btnExport = @id("btn-export-mcstructure");
+if (btnExport) {
+  @on(btnExport, "click", () => {
+    unless (currentWorld and currentWorld.blocks.size > 0) {
+      showToast("No hay bloques en la escena para exportar.");
+      return;
+    }
+    try {
+      showToast("Generando .mcstructure...");
+      val buffer = serializeMcStructure(currentWorld);
+      val BlobClass = @win.Blob;
+      val blob = new BlobClass([buffer], { "type": "application/octet-stream" });
+      val URLClass = @win.URL;
+      val url = URLClass.createObjectURL(blob);
+      val a = @create("a", { "href": url, "download": "test_structure.mcstructure" });
+      @doc.body.appendChild(a);
+      a.click();
+      @doc.body.removeChild(a);
+      URLClass.revokeObjectURL(url);
+      showToast("¡test_structure.mcstructure descargado con exito!");
+    } catch (err) {
+      @error("[Export Error]:", err);
+      showToast(`Error al exportar: ${err.message}`);
+    }
+  });
 }
 
 init();

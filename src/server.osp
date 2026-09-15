@@ -96,7 +96,7 @@ async fn runMainBlock(filePath = null) {
     `);
     runner(context);
 
-    // Exportar archivos (.mcfunction, coordinates.json, build.log)
+    // Exportar archivos (.mcstructure, coordinates.json, build.log)
     val exportResults = exporter.exportAll(world, "test_structure");
     latestWorldData = world.serialize();
 

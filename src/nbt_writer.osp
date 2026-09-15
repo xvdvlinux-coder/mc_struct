@@ -1,0 +1,97 @@
+// nbt_writer.osp - Serializador binario Little-Endian NBT compatible con Navegador y Node.js en Oriented-Direct
+
+class NbtWriter {
+  constructor(initialCapacity = 65536) {
+    this.capacity = initialCapacity;
+    this.buffer = new Uint8Array(this.capacity);
+    this.view = new DataView(this.buffer.buffer);
+    this.offset = 0;
+    this.encoder = new TextEncoder();
+  }
+
+  _ensure(bytesNeeded) {
+    if (this.offset + bytesNeeded > this.capacity) {
+      this.capacity = Math.max(this.capacity * 2, this.offset + bytesNeeded + 32768);
+      val newBuffer = new Uint8Array(this.capacity);
+      newBuffer.set(this.buffer.subarray(0, this.offset));
+      this.buffer = newBuffer;
+      this.view = new DataView(this.buffer.buffer);
+    }
+  }
+
+  writeByte(value) {
+    this._ensure(1);
+    this.view.setInt8(this.offset, value);
+    this.offset += 1;
+  }
+
+  writeShort(value) {
+    this._ensure(2);
+    this.view.setInt16(this.offset, value, true);
+    this.offset += 2;
+  }
+
+  writeInt(value) {
+    this._ensure(4);
+    this.view.setInt32(this.offset, value, true);
+    this.offset += 4;
+  }
+
+  writeString(str) {
+    val encoded = this.encoder.encode(str);
+    this.writeShort(encoded.length);
+    this._ensure(encoded.length);
+    this.buffer.set(encoded, this.offset);
+    this.offset += encoded.length;
+  }
+
+  writeTagHeader(tagType, name) {
+    this.writeByte(tagType);
+    this.writeString(name);
+  }
+
+  writeNamedByte(name, value) {
+    this.writeTagHeader(1, name);
+    this.writeByte(value);
+  }
+
+  writeNamedShort(name, value) {
+    this.writeTagHeader(2, name);
+    this.writeShort(value);
+  }
+
+  writeNamedInt(name, value) {
+    this.writeTagHeader(3, name);
+    this.writeInt(value);
+  }
+
+  writeNamedString(name, str) {
+    this.writeTagHeader(8, name);
+    this.writeString(str);
+  }
+
+  writeNamedCompound(name) {
+    this.writeTagHeader(10, name);
+  }
+
+  writeNamedList(name, elemType, length) {
+    this.writeTagHeader(9, name);
+    this.writeByte(elemType);
+    this.writeInt(length);
+  }
+
+  writeListHeader(elemType, length) {
+    this.writeByte(elemType);
+    this.writeInt(length);
+  }
+
+  writeEnd() {
+    this.writeByte(0);
+  }
+
+  getBuffer() {
+    return this.buffer.subarray(0, this.offset);
+  }
+}
+
+export { NbtWriter };
